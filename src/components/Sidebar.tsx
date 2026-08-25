@@ -33,7 +33,7 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col bg-navy-800 text-white">
       <div className="flex flex-col items-center gap-2 px-6 pt-8 pb-6 border-b border-white/10">
-        <Image src="/brand/logo-icon.png" alt="Wilson Andrade" width={56} height={56} className="rounded-full" />
+        <Image src="/brand/logo-icon.png" alt="Wilson Andrade" width={56} height={56} />
         <div className="text-center">
           <p className="font-display text-lg tracking-wide gold-text">WILSON ANDRADE</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-gold-300/80">Advocacia e Consultoria</p>
