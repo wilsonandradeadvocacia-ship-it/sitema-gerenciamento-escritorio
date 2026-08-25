@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { pushEventToGoogle } from "@/lib/google";
 
+export const dynamic = "force-dynamic";
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json();
   const data: any = {};

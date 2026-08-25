@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOAuthClient, GOOGLE_CONFIGURED } from "@/lib/google";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   if (!GOOGLE_CONFIGURED) {
     return NextResponse.json(

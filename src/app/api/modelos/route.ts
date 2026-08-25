@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { saveUploadedFile } from "@/lib/upload";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const templates = await prisma.docTemplate.findMany({ orderBy: { createdAt: "desc" } });
   return NextResponse.json(templates);

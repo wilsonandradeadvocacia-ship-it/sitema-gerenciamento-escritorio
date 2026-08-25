@@ -13,6 +13,23 @@ npm run dev               # http://localhost:3000
 
 Para produção: `npm run build && npm start`. O app usa SQLite por padrão (arquivo `prisma/dev.db`, definido em `DATABASE_URL` no `.env`) — para múltiplos usuários simultâneos ou hospedagem serverless, troque o `datasource` do `prisma/schema.prisma` para Postgres/MySQL.
 
+## Publicar online (Railway)
+
+Este projeto já inclui `Dockerfile` + `docker-entrypoint.sh` prontos para o [Railway](https://railway.com). O Dockerfile instala o LibreOffice (necessário para exportar PDF) e o entrypoint cria automaticamente um volume persistente para o banco de dados e os arquivos anexados/gerados, para que nada se perca entre deploys.
+
+**Passo a passo:**
+
+1. Crie uma conta em [railway.com](https://railway.com) (dá pra entrar direto com a conta do GitHub).
+2. Clique em **New Project → Deploy from GitHub repo** e autorize o Railway a acessar o repositório `sitema-gerenciamento-escritorio`.
+3. Selecione a branch `claude/law-office-management-system-tck78z` (ou a branch principal, depois que esta PR for aceita). O Railway vai detectar o `Dockerfile` automaticamente e começar a build.
+4. Enquanto builda, adicione um **Volume**: na aba do serviço, vá em **Settings → Volumes → New Volume**, monte em `/app/persistent` (esse é o caminho que o `docker-entrypoint.sh` já espera).
+5. Em **Settings → Variables**, adicione (todas opcionais, mas recomendadas):
+   - `ANTHROPIC_API_KEY` — para as sugestões de IA usarem o Claude de verdade
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — para conectar o Google Calendar
+   - Não é necessário definir `DATABASE_URL` nem `PORT` — o entrypoint e o Railway cuidam disso automaticamente.
+6. Em **Settings → Networking**, clique em **Generate Domain** para gerar o link público (algo como `seuapp.up.railway.app`).
+7. Pronto — qualquer novo `git push` nessa branch republica automaticamente.
+
 ## Variáveis de ambiente (`.env`)
 
 | Variável | Obrigatória | Para quê |

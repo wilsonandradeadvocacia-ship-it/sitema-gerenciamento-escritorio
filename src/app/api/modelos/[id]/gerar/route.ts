@@ -8,6 +8,8 @@ import path from "path";
 import { mkdir, writeFile } from "fs/promises";
 import { v4 as uuid } from "uuid";
 
+export const dynamic = "force-dynamic";
+
 const GEN_ROOT = path.join(process.cwd(), "public", "uploads", "gerados");
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {

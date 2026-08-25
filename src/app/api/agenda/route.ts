@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { pushEventToGoogle } from "@/lib/google";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const from = req.nextUrl.searchParams.get("from");
   const to = req.nextUrl.searchParams.get("to");

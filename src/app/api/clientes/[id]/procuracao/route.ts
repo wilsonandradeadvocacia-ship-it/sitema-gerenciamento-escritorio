@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildProcuracaoDocx, buildClientQualification, saveGeneratedDoc } from "@/lib/docgen";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json().catch(() => ({}));
   const client = await prisma.client.findUnique({ where: { id: params.id } });

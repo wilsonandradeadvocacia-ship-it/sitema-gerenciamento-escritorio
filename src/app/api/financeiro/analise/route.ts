@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const since = startOfMonth(subMonths(new Date(), 11));
   const transactions = await prisma.financeTransaction.findMany({ where: { date: { gte: since } } });

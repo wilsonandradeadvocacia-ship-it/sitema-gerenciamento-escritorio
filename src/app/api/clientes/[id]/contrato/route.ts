@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { buildContratoDocx, buildClientQualification, saveGeneratedDoc } from "@/lib/docgen";
 import { addMonths } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json();
   const client = await prisma.client.findUnique({ where: { id: params.id } });

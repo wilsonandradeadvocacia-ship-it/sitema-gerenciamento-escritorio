@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { analyzePublication } from "@/lib/ai";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Endpoint feito para ser chamado por um agendador externo (Vercel Cron, cron do
  * sistema operacional, GitHub Actions, etc.) todos os dias às 08:00.

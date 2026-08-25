@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { addDays } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const [processesByAreaRaw, activeProcesses, clients, pendingPublications, upcomingEvents, analysis, recentPubs] = await Promise.all([
     prisma.process.groupBy({ by: ["area"], _count: { _all: true } }),

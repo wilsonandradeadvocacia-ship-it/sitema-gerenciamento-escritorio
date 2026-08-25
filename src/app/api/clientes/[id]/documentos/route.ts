@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { saveUploadedFile } from "@/lib/upload";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const form = await req.formData();
   const file = form.get("file") as File;

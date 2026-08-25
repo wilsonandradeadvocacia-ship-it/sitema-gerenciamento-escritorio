@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateMarketingContent } from "@/lib/ai";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json();
   const campaign = await prisma.marketingCampaign.findUnique({ where: { id: params.id } });

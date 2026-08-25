@@ -5,6 +5,8 @@ import { parseCSV, parseOFX, parseStatementText } from "@/lib/statement-parser";
 import path from "path";
 import { readFile } from "fs/promises";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const form = await req.formData();
   const file = form.get("file") as File;

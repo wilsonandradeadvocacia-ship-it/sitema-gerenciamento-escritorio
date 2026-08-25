@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { suggestProcessTask } from "@/lib/ai";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const process = await prisma.process.findUnique({
     where: { id: params.id },

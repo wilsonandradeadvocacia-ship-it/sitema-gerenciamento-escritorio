@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { addDays } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json();
   const publication = await prisma.publication.findUnique({ where: { id: params.id } });

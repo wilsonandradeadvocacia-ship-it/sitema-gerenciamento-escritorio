@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { analyzePublication } from "@/lib/ai";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get("status");
   const publications = await prisma.publication.findMany({

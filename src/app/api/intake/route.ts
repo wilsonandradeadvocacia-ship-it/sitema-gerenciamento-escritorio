@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { saveUploadedFile } from "@/lib/upload";
 import { classifyIntakeFile } from "@/lib/ai";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const files = await prisma.intakeFile.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
   return NextResponse.json(files);
