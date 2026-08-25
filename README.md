@@ -27,8 +27,10 @@ Este projeto já inclui `Dockerfile` + `docker-entrypoint.sh` prontos para o [Ra
    - `ANTHROPIC_API_KEY` — para as sugestões de IA usarem o Claude de verdade
    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — para conectar o Google Calendar
    - Não é necessário definir `DATABASE_URL` nem `PORT` — o entrypoint e o Railway cuidam disso automaticamente.
-6. Em **Settings → Networking**, clique em **Generate Domain** para gerar o link público (algo como `seuapp.up.railway.app`).
+6. Em **Settings → Networking**, clique em **Generate Domain** para gerar o link público (algo como `seuapp.up.railway.app`). No campo de porta, use **8080** — é a porta padrão que o Railway atribui a este serviço (o `docker-entrypoint.sh` respeita a variável `PORT` que o Railway define automaticamente).
 7. Pronto — qualquer novo `git push` nessa branch republica automaticamente.
+
+> Se ao abrir o link aparecer **"Application failed to respond"**, normalmente é porque a porta configurada em Networking não bate com a porta real do app. Confira nos **Deploy Logs** a linha `Starting Next.js on port ...` e ajuste a porta em Networking para o mesmo valor.
 
 ## Variáveis de ambiente (`.env`)
 
