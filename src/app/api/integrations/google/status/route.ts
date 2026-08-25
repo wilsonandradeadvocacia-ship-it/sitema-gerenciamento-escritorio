@@ -1,0 +1,6 @@
+import { NextResponse } from "next/server";
+import { GOOGLE_CONFIGURED, isGoogleConnected } from "@/lib/google";
+
+export async function GET() {
+  return NextResponse.json({ configured: GOOGLE_CONFIGURED, connected: await isGoogleConnected() });
+}
