@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- ADVOGADOS / COLABORADORES ----------
+model Lawyer {
+  id        String   @id @default(cuid())
+  name      String
+  oab       String?
+  role      String   @default("advogado") // advogado | colaborador | estagiario
+  email     String?
+  phone     String?
+  areas     String? // comma separated practice areas
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  processes      Process[]
+  events         CalendarEvent[]
+  publications   Publication[]
+  tasksAssigned  CalendarEvent[] @relation("AssignedLawyer")
+}
+
+// ---------- CLIENTES ----------
+model Client {
+  id            String   @id @default(cuid())
+  kind          String   @default("PF") // PF | PJ
+  name          String
+  cpfCnpj       String?
+  rg            String?
+  maritalStatus String?
+  profession    String?
+  nationality   String?  @default("brasileiro(a)")
+  legalRepName  String? // for PJ: representative name
+  legalRepCpf   String?
+  address       String?
+  city          String?
+  state         String?
+  zip           String?
+  phone         String?
+  email         String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  processes     Process[]
+  documents     ClientDocument[]
+  contracts     Contract[]
+  powersOfAtty  PowerOfAttorney[]
+  events        CalendarEvent[]
+  transactions  FinanceTransaction[]
+}
+
+model ClientDocument {
+  id         String   @id @default(cuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type       String // RG | CPF | Comprovante de Residencia | Contrato Social | Outro
+  fileName   String
+  filePath   String
+  uploadedAt DateTime @default(now())
+}
+
+// ---------- PROCESSOS ----------
+model Process {
+  id               String   @id @default(cuid())
+  number           String? // numero CNJ
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  area             String // civel, criminal, tributario, trabalhista, administrativo, municipal, eleitoral, familia, previdenciario, sucessao, contratual
+  court            String? // vara/tribunal
+  instance         String? // 1ª instancia, 2ª instancia, tribunal superior
+  status           String   @default("ativo") // ativo | suspenso | arquivado | encerrado
+  phase            String?  // fase atual, ex: "Fase de conhecimento - aguardando contestação"
+  subject          String?
+  causeValue        Float?
+  responsibleId    String?
+  responsible      Lawyer?  @relation(fields: [responsibleId], references: [id])
+  suggestedTask    String?
+  suggestedUrgency String? // baixa | media | alta | critica
+  startDate        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  movements    ProcessMovement[]
+  events       CalendarEvent[]
+  publications Publication[]
+  contracts    Contract[]
+  powersOfAtty PowerOfAttorney[]
+}
+
+model ProcessMovement {
+  id         String   @id @default(cuid())
+  processId  String
+  process    Process  @relation(fields: [processId], references: [id], onDelete: Cascade)
+  date       DateTime @default(now())
+  phase      String?
+  description String
+  source     String   @default("manual") // manual | publicacao
+  createdAt  DateTime @default(now())
+}
+
+// ---------- PROCURAÇÃO / CONTRATO ----------
+model PowerOfAttorney {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  processId   String?
+  process     Process? @relation(fields: [processId], references: [id])
+  powers      String   @default("Ad Judicia et Extra")
+  scopeText   String?
+  filePath    String?
+  createdAt   DateTime @default(now())
+}
+
+model Contract {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  processId       String?
+  process         Process? @relation(fields: [processId], references: [id])
+  objectText      String?
+  paymentType     String   @default("mensal") // mensal | avista | parcelado | exito | hora
+  totalValue      Float?
+  installments    Int      @default(1)
+  installmentValue Float?
+  dueDay          Int?
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  successFeePct   Float?
+  bankInfo        String?
+  filePath        String?
+  signed          Boolean  @default(false)
+  signedDate      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  installmentsList ContractInstallment[]
+}
+
+model ContractInstallment {
+  id         String    @id @default(cuid())
+  contractId String
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  number     Int
+  dueDate    DateTime
+  value      Float
+  paid       Boolean   @default(false)
+  paidDate   DateTime?
+  transactionId String?
+}
+
+// ---------- AGENDA ----------
+model CalendarEvent {
+  id             String    @id @default(cuid())
+  title          String
+  type           String    // reuniao | compromisso | audiencia | prazo | tarefa
+  date           DateTime
+  endDate        DateTime?
+  allDay         Boolean   @default(false)
+  location       String?
+  description    String?
+  status         String    @default("pendente") // pendente | concluido | cancelado
+  urgency        String?   // baixa | media | alta | critica
+  processId      String?
+  process        Process?  @relation(fields: [processId], references: [id])
+  clientId       String?
+  client         Client?   @relation(fields: [clientId], references: [id])
+  lawyerId       String?
+  lawyer         Lawyer?   @relation(fields: [lawyerId], references: [id])
+  assignedToId   String?
+  assignedTo     Lawyer?   @relation("AssignedLawyer", fields: [assignedToId], references: [id])
+  publicationId  String?
+  publication    Publication? @relation(fields: [publicationId], references: [id])
+  googleEventId  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ---------- PUBLICAÇÕES ----------
+model Publication {
+  id               String   @id @default(cuid())
+  tribunal         String
+  instance         String?
+  date             DateTime @default(now())
+  processNumber    String?
+  processId        String?
+  process          Process? @relation(fields: [processId], references: [id])
+  content          String
+  matchedLawyerId  String?
+  matchedLawyer    Lawyer?  @relation(fields: [matchedLawyerId], references: [id])
+  status           String   @default("novo") // novo | analisado | prazo_definido | concluido
+  suggestedTask    String?
+  suggestedDeadlineDays Int?
+  urgency          String?  // baixa | media | alta | critica
+  urgencyReason    String?
+  assignedToId     String?
+  createdAt        DateTime @default(now())
+
+  events CalendarEvent[]
+}
+
+// ---------- MARKETING ----------
+model MarketingCampaign {
+  id          String   @id @default(cuid())
+  name        String
+  area        String
+  goal        String?
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  status      String   @default("ativa") // ativa | pausada | encerrada
+  budget      Float?
+  createdAt   DateTime @default(now())
+
+  contents MarketingContent[]
+  metrics  MarketingMetric[]
+}
+
+model MarketingContent {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type        String // instagram_post | instagram_carousel | instagram_reels | facebook_post | artigo | imagem_prompt
+  title       String?
+  content     String // texto gerado; para carrossel, JSON com as telas
+  imagePaths  String? // JSON array de caminhos das imagens geradas (/uploads/marketing/...)
+  createdAt   DateTime @default(now())
+
+  socialPosts SocialPost[]
+}
+
+// ---------- REDES SOCIAIS (META) ----------
+model SocialPost {
+  id               String   @id @default(cuid())
+  contentId        String?
+  content          MarketingContent? @relation(fields: [contentId], references: [id])
+  platform         String // instagram | facebook
+  caption          String
+  imagePaths       String? // JSON array
+  status           String   @default("rascunho") // rascunho | agendado | publicado | falhou
+  scheduledAt      DateTime?
+  publishedAt      DateTime?
+  externalPostId   String?
+  errorMessage     String?
+  boosted          Boolean  @default(false)
+  boostBudget      Float?
+  boostDurationDays Int?
+  boostCampaignId  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model MarketingMetric {
+  id            String   @id @default(cuid())
+  campaignId    String
+  campaign      MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  month         String // YYYY-MM
+  newProcesses  Int      @default(0)
+  newMeetings   Int      @default(0)
+  newClients    Int      @default(0)
+  estRevenue    Float    @default(0)
+  createdAt     DateTime @default(now())
+}
+
+// ---------- FINANCEIRO ----------
+model FinanceAccount {
+  id            String   @id @default(cuid())
+  bank          String
+  agency        String?
+  accountNumber String?
+  type          String   @default("corrente") // corrente | poupanca | investimento | caixa
+  initialBalance Float   @default(0)
+  createdAt     DateTime @default(now())
+
+  transactions FinanceTransaction[]
+  statements   BankStatementImport[]
+}
+
+model FinanceTransaction {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     FinanceAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  date        DateTime
+  description String
+  amount      Float // positive = receita, negative = despesa
+  type        String // receita | despesa
+  category    String?
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id])
+  source      String   @default("manual") // manual | extrato | contrato
+  createdAt   DateTime @default(now())
+}
+
+model BankStatementImport {
+  id           String   @id @default(cuid())
+  accountId    String
+  account      FinanceAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  fileName     String
+  filePath     String
+  importedAt   DateTime @default(now())
+  txCount      Int      @default(0)
+  summary      String?
+}
+
+// ---------- MODELOS ----------
+model DocTemplate {
+  id         String   @id @default(cuid())
+  name       String
+  category   String // peca | contrato | procuracao | notificacao | outro
+  fileName   String
+  filePath   String
+  variables  String? // JSON array of {key,label}
+  createdAt  DateTime @default(now())
+
+  generated GeneratedDocument[]
+}
+
+model GeneratedDocument {
+  id         String   @id @default(cuid())
+  templateId String
+  template   DocTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  clientName String?
+  filePath   String
+  createdAt  DateTime @default(now())
+}
+
+// ---------- CONFIGURAÇÕES / INTEGRAÇÕES ----------
+model Setting {
+  key   String @id
+  value String
+}
+
+// ---------- INTAKE (Novos) ----------
+model IntakeFile {
+  id          String   @id @default(cuid())
+  fileName    String
+  filePath    String
+  suggestion  String? // JSON with AI classification result
+  status      String  @default("pendente") // pendente | processado | descartado
+  createdAt   DateTime @default(now())
+}
