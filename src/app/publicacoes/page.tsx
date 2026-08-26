@@ -99,9 +99,9 @@ export default function PublicacoesPage() {
 
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-navy-100 bg-white px-4 py-3 text-xs text-navy-500">
         <Info size={14} className="mt-0.5 shrink-0 text-gold-500" />
-        A busca automática diária às 08h depende de um provedor de diários oficiais (ex. Escavador, Judit.io, CODILO). Configure-o em{" "}
-        <code className="mx-1 rounded bg-navy-50 px-1">/api/publicacoes/cron</code> e agende sua execução diária (Vercel Cron ou cron do
-        servidor). Enquanto isso, use "Importar publicação" para lançar manualmente o conteúdo do diário.
+        A integração com a API do Escavador já está pronta no código — falta contratar e configurar{" "}
+        <code className="mx-1 rounded bg-navy-50 px-1">ESCAVADOR_API_TOKEN</code> para a busca automática diária às 08h funcionar (ver
+        README). Enquanto isso, use "Importar publicação" para lançar manualmente o conteúdo do diário.
       </div>
 
       <div className="flex flex-wrap gap-2 mb-5">

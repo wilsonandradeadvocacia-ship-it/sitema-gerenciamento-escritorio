@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { analyzePublication } from "@/lib/ai";
+import { ESCAVADOR_CONFIGURED, fetchRecentPublicationsForLawyers, FetchedPublication } from "@/lib/escavador";
 
 export const dynamic = "force-dynamic";
 
@@ -8,22 +9,22 @@ export const dynamic = "force-dynamic";
  * Endpoint feito para ser chamado por um agendador externo (Vercel Cron, cron do
  * sistema operacional, GitHub Actions, etc.) todos os dias às 08:00.
  *
- * Este é o ponto de integração com um provedor de diários oficiais (DJE) de todos
- * os tribunais. Não há, por padrão, acesso a uma API paga de monitoramento de
- * publicações (ex.: Escavador, Judit.io, CODILO, JusBrasil API, Malote Digital) —
- * quando o escritório contratar um desses provedores, basta implementar
- * `fetchDailyPublications()` abaixo para consultar a API do provedor e retornar
- * as publicações do dia que citem os advogados cadastrados.
+ * Busca publicações via a API do Escavador (src/lib/escavador.ts) quando
+ * ESCAVADOR_API_TOKEN está configurado. Sem o token, não há como buscar
+ * automaticamente — use o botão "Importar publicação" manualmente enquanto
+ * isso, ou configure outro provedor (Judit.io, CODILO) implementando a mesma
+ * interface `FetchedPublication` abaixo.
  *
  * Proteja este endpoint definindo CRON_SECRET no .env e configurando o agendador
  * para enviar o header "x-cron-secret".
  */
 
-async function fetchDailyPublications(lawyerNames: string[]): Promise<
-  { tribunal: string; instance?: string; content: string; processNumber?: string; date?: string }[]
-> {
-  // TODO: integrar com o provedor de diários oficiais contratado pelo escritório.
-  // Exemplo de contrato esperado: retornar uma publicação por citação encontrada.
+async function fetchDailyPublications(lawyers: { oab: string | null }[]): Promise<FetchedPublication[]> {
+  if (ESCAVADOR_CONFIGURED) {
+    return fetchRecentPublicationsForLawyers(lawyers, 24);
+  }
+  // Nenhum provedor configurado (ESCAVADOR_API_TOKEN ausente). Ver README para
+  // como contratar e configurar. Enquanto isso, use "Importar publicação" manualmente.
   return [];
 }
 
@@ -34,11 +35,17 @@ export async function POST(req: NextRequest) {
   }
 
   const lawyers = await prisma.lawyer.findMany({ where: { active: true } });
-  const raw = await fetchDailyPublications(lawyers.map((l) => l.name));
+  const raw = await fetchDailyPublications(lawyers.map((l) => ({ oab: l.oab })));
 
   const created = [];
   for (const item of raw) {
-    const matched = lawyers.find((l) => item.content.toLowerCase().includes(l.name.toLowerCase()));
+    // Evita duplicar publicações já importadas para o mesmo processo/conteúdo.
+    const exists = await prisma.publication.findFirst({
+      where: { processNumber: item.processNumber ?? undefined, content: item.content },
+    });
+    if (exists) continue;
+
+    const matched = lawyers.find((l) => l.name && item.content.toLowerCase().includes(l.name.toLowerCase()));
     const analysis = await analyzePublication(item.content);
     const publication = await prisma.publication.create({
       data: {
@@ -58,7 +65,7 @@ export async function POST(req: NextRequest) {
     created.push(publication);
   }
 
-  return NextResponse.json({ imported: created.length, publications: created });
+  return NextResponse.json({ imported: created.length, publications: created, providerConfigured: ESCAVADOR_CONFIGURED });
 }
 
 export async function GET(req: NextRequest) {
