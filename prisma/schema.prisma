@@ -221,13 +221,37 @@ model MarketingCampaign {
 }
 
 model MarketingContent {
-  id         String   @id @default(cuid())
-  campaignId String
-  campaign   MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  type       String // post | legenda | artigo | imagem_prompt
-  title      String?
-  content    String
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type        String // instagram_post | instagram_carousel | instagram_reels | facebook_post | artigo | imagem_prompt
+  title       String?
+  content     String // texto gerado; para carrossel, JSON com as telas
+  imagePaths  String? // JSON array de caminhos das imagens geradas (/uploads/marketing/...)
+  createdAt   DateTime @default(now())
+
+  socialPosts SocialPost[]
+}
+
+// ---------- REDES SOCIAIS (META) ----------
+model SocialPost {
+  id               String   @id @default(cuid())
+  contentId        String?
+  content          MarketingContent? @relation(fields: [contentId], references: [id])
+  platform         String // instagram | facebook
+  caption          String
+  imagePaths       String? // JSON array
+  status           String   @default("rascunho") // rascunho | agendado | publicado | falhou
+  scheduledAt      DateTime?
+  publishedAt      DateTime?
+  externalPostId   String?
+  errorMessage     String?
+  boosted          Boolean  @default(false)
+  boostBudget      Float?
+  boostDurationDays Int?
+  boostCampaignId  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model MarketingMetric {

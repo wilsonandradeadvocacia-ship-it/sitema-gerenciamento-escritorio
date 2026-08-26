@@ -137,30 +137,165 @@ export async function suggestProcessTask(
 
 // ---------------- MARKETING ----------------
 
+export type MarketingContentType =
+  | "instagram_post"
+  | "instagram_carousel"
+  | "instagram_reels"
+  | "facebook_post"
+  | "artigo";
+
+export interface MarketingSlide {
+  title: string;
+  body: string;
+}
+
+export interface GeneratedMarketingContent {
+  headline?: string;
+  body: string;
+  slides?: MarketingSlide[];
+  hashtags?: string[];
+  complianceNote: string;
+}
+
+const OAB_SYSTEM_PROMPT = `Você é um especialista em marketing jurídico brasileiro, redigindo para um escritório de advocacia real, sujeito ao Código de Ética da OAB e ao Provimento 205/2021 do CFOAB.
+
+Regra central: INFORME E DEMONSTRE, NUNCA OFERTE, PROMETA OU PRECIFIQUE. O conteúdo existe para que o leitor entenda um problema jurídico e conclua sozinho que precisa de um advogado — quem faz a oferta é o cliente, não o escritório.
+
+Estrutura obrigatória do conteúdo (adapte ao formato pedido, mas mantenha a lógica):
+1. Situação-problema descrita de forma IMPESSOAL (nunca 2ª pessoa tipo "você tem direito a...").
+2. Explicação técnica com base normativa (lei, artigo, súmula ou tema repetitivo) — cite APENAS o que você tem certeza; se não tiver certeza do número exato do dispositivo, use algo como "[confirmar dispositivo exato antes de publicar]" em vez de inventar.
+3. Uma nuance, exceção ou erro comum — é isso que demonstra domínio real e diferencia de conteúdo raso.
+4. Fechamento informativo, NUNCA comercial: algo como "Cada caso depende da análise dos documentos e do contexto específico." Nunca "fale conosco", "agende sua consulta" ou similar.
+
+Proibido em qualquer hipótese: mencionar honorários, valores, "consulta gratuita" ou desconto; ofertar serviço ou convocar para contratar; prometer ou insinuar resultado; citar caso concreto identificável (nomes, prints, detalhes que identifiquem cliente); autoengrandecimento ("o melhor", "referência", "líder"); ostentação; incentivo a litígio ou urgência artificial ("corre que o prazo acaba", "não perca tempo").
+
+Escreva sempre em português do Brasil, com profundidade real — o leitor deve terminar sabendo mais sobre o tema do que sabia antes, não apenas ter lido um gancho publicitário.`;
+
+function complianceNoteFallback(): string {
+  return "Conformidade OAB: informação/marketing de conteúdo (permitido). Verificado sem honorários, oferta, promessa de resultado, caso identificável, autoengrandecimento ou ostentação. Revise a base normativa citada antes de publicar e inclua a identificação do escritório (nome + OAB).";
+}
+
+function buildMarketingPrompt(type: MarketingContentType, area: string, brief: string): { prompt: string; maxTokens: number; jsonMode: boolean } {
+  const header = `Área do direito: ${area}\nTema/objetivo do conteúdo: ${brief}\n\n`;
+
+  switch (type) {
+    case "instagram_carousel":
+      return {
+        maxTokens: 2500,
+        jsonMode: true,
+        prompt:
+          header +
+          `Crie um CARROSSEL para Instagram com 7 a 9 telas seguindo esta estrutura:
+- Tela 1 (capa): a pergunta ou conceito central, sem clickbait, sem emoji de alerta, sem caixa alta.
+- Telas 2-3: o problema em situação impessoal.
+- Telas 4-6: a explicação técnica, uma ideia por tela, com base legal.
+- Penúltima tela: a nuance, exceção ou erro comum.
+- Última tela: fechamento informativo + nome do escritório "Wilson Andrade Advocacia e Consultoria Jurídica" + "OAB/AL 14.662". Sem CTA de venda.
+
+Depois, escreva a LEGENDA do post (desenvolva o conteúdo em prosa, não repita a arte, 150-300 palavras) e 5 a 8 hashtags de TEMA (ex. #direitotributario), nunca de captação (nunca #advogadobarato ou similar).
+
+Responda SOMENTE em JSON válido, sem markdown, neste formato exato:
+{"slides": [{"title": "...", "body": "..."}, ...], "body": "<legenda completa>", "hashtags": ["...", ...]}`,
+      };
+
+    case "instagram_post":
+      return {
+        maxTokens: 1400,
+        jsonMode: true,
+        prompt:
+          header +
+          `Crie um POST ÚNICO para Instagram (não carrossel): uma frase-gancho curta para a arte da imagem (headline, até 12 palavras, sem clickbait) e uma legenda completa desenvolvendo o tema em prosa (150-250 palavras) seguindo a estrutura obrigatória. Finalize com 5 a 8 hashtags de tema.
+
+Responda SOMENTE em JSON válido: {"headline": "...", "body": "<legenda completa>", "hashtags": ["...", ...]}`,
+      };
+
+    case "instagram_reels":
+      return {
+        maxTokens: 1400,
+        jsonMode: true,
+        prompt:
+          header +
+          `Crie um ROTEIRO para Reels/vídeo curto (30-60s) sobre o tema, com marcação de tempo aproximada por bloco (gancho, problema, explicação técnica, nuance, fechamento), e a legenda de publicação com hashtags de tema.
+
+Responda SOMENTE em JSON válido: {"headline": "<gancho de abertura>", "body": "<roteiro com marcação de tempo>\\n\\nLegenda: <legenda completa>", "hashtags": ["...", ...]}`,
+      };
+
+    case "facebook_post":
+      return {
+        maxTokens: 1600,
+        jsonMode: true,
+        prompt:
+          header +
+          `Crie um POST para Facebook: o público do Facebook tolera texto mais longo e institucional que o Instagram. Escreva 250-400 palavras seguindo a estrutura obrigatória, tom levemente mais formal, terminando com a identificação do escritório. Sugira também 3-5 hashtags de tema (uso é mais discreto no Facebook que no Instagram).
+
+Responda SOMENTE em JSON válido: {"body": "<texto completo do post>", "hashtags": ["...", ...]}`,
+      };
+
+    case "artigo":
+    default:
+      return {
+        maxTokens: 4000,
+        jsonMode: false,
+        prompt:
+          header +
+          `Escreva um ARTIGO de blog/site com 900 a 1500 palavras: título que responde a uma busca real (não "genérico"), introdução, 3 a 5 subtítulos com ## markdown, base normativa explícita e citações verificáveis, uma seção de nuance/exceção, e conclusão informativa (nunca "fale conosco"). Tom institucional e didático.`,
+      };
+  }
+}
+
+function heuristicMarketingContent(type: MarketingContentType, area: string, brief: string): GeneratedMarketingContent {
+  const firmLine = "Wilson Andrade Advocacia e Consultoria Jurídica — OAB/AL 14.662";
+  const explicacao = `[Situação-problema] Casos envolvendo "${brief}" na área de Direito ${area} costumam gerar dúvidas recorrentes sobre como a legislação se aplica ao caso concreto.\n\n[Explicação técnica] A análise depende da norma aplicável — [confirmar dispositivo exato: lei, artigo ou súmula pertinente a "${brief}"] — e dos fatos específicos de cada situação.\n\n[Nuance] Um erro comum é tratar esse tema de forma genérica; exceções e prazos específicos costumam mudar o resultado da análise.\n\n[Fechamento] Cada caso depende da análise dos documentos e do contexto específico.`;
+  const hashtags = [`#direito${area.replace(/\s+/g, "").toLowerCase()}`, "#wilsonandradeadvocacia", "#direitosdocidadao", "#consultoriajuridica", "#maceio"];
+
+  if (type === "instagram_carousel") {
+    return {
+      slides: [
+        { title: brief, body: "" },
+        { title: "O problema", body: `Situação recorrente envolvendo ${area}.` },
+        { title: "O que diz a lei", body: `[confirmar dispositivo exato aplicável a "${brief}"]` },
+        { title: "Um ponto de atenção", body: "Exceções e prazos específicos costumam mudar o resultado da análise." },
+        { title: firmLine, body: "Cada caso depende da análise dos documentos e do contexto específico." },
+      ],
+      body: explicacao,
+      hashtags,
+      complianceNote: complianceNoteFallback(),
+    };
+  }
+
+  return {
+    headline: type === "instagram_post" || type === "instagram_reels" ? brief : undefined,
+    body: explicacao,
+    hashtags,
+    complianceNote: complianceNoteFallback(),
+  };
+}
+
 export async function generateMarketingContent(
-  type: "post" | "legenda" | "artigo" | "imagem_prompt",
+  type: MarketingContentType,
   area: string,
   brief: string
-): Promise<string> {
-  const system =
-    "Você é um especialista em marketing jurídico brasileiro, atento às regras de publicidade da OAB (Provimento 205/2021): proibido prometer resultado, captar clientela de forma vil ou mencionar honorários de forma promocional. Produza conteúdo informativo, educativo e institucional, sempre em português do Brasil.";
-  const typeInstructions: Record<string, string> = {
-    post: "Escreva um texto curto para post de rede social (Instagram/LinkedIn), com gancho inicial, corpo educativo e call-to-action sutil (ex: 'fale com nosso escritório').",
-    legenda: "Escreva uma legenda para Instagram, incluindo de 5 a 8 hashtags relevantes ao final.",
-    artigo: "Escreva um artigo de blog/site com título, introdução, 3-4 subtópicos com ## markdown e conclusão. Tom institucional e educativo.",
-    imagem_prompt: "Escreva um prompt descritivo em inglês para geração de imagem (estilo editorial, elegante, cores douradas e azul-marinho, tema jurídico), adequado para um gerador de imagens IA.",
-  };
-  const prompt = `Área do direito: ${area}\nTema/objetivo: ${brief}\n\n${typeInstructions[type]}`;
-  const text = await askClaude(system, prompt, 1200);
-  if (text) return text.trim();
+): Promise<GeneratedMarketingContent> {
+  const heuristic = heuristicMarketingContent(type, area, brief);
+  const { prompt, maxTokens, jsonMode } = buildMarketingPrompt(type, area, brief);
 
-  const fallback: Record<string, string> = {
-    post: `📌 Você sabia? Questões de ${area} podem impactar diretamente sua vida ou empresa.\n\nNossa equipe está pronta para orientar você sobre ${brief}.\n\nFale com o Wilson Andrade Advocacia e entenda seus direitos.`,
-    legenda: `${brief} — saiba como o Direito ${area} pode te proteger. Consulte nossa equipe. ⚖️\n\n#advocacia #direito${area.replace(/\s/g, "")} #wilsonandradeadvocacia #direitosdocidadao #consultoriajuridica #maceio #advogado`,
-    artigo: `# ${brief}\n\n## Introdução\nO tema "${brief}" é recorrente na área de Direito ${area} e gera muitas dúvidas.\n\n## Pontos de atenção\nDestacamos os principais aspectos legais envolvidos.\n\n## Como o escritório pode ajudar\nNossa equipe presta consultoria especializada em ${area}.\n\n## Conclusão\nProcure orientação jurídica especializada para o seu caso.`,
-    imagem_prompt: `Elegant editorial illustration representing ${area} law in Brazil, gold and navy color palette, minimalist, professional law firm aesthetic, no text`,
+  const text = await askClaude(OAB_SYSTEM_PROMPT, prompt, maxTokens);
+  if (!text) return heuristic;
+
+  if (!jsonMode) {
+    return { body: text.trim(), complianceNote: complianceNoteFallback() };
+  }
+
+  const parsed = extractJson<Partial<GeneratedMarketingContent>>(text);
+  if (!parsed || !parsed.body) return heuristic;
+
+  return {
+    headline: parsed.headline,
+    body: parsed.body,
+    slides: parsed.slides,
+    hashtags: parsed.hashtags,
+    complianceNote: complianceNoteFallback(),
   };
-  return fallback[type];
 }
 
 // ---------------- INTAKE (Novos) CLASSIFICATION ----------------

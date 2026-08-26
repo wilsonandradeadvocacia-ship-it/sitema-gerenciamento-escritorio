@@ -59,8 +59,20 @@ O sistema foi construído com esses pontos já prontos no código, mas alguns de
 
    Enquanto isso (ou se preferir não contratar), use o botão **"Importar publicação"** na página Publicações para lançar manualmente o conteúdo — a análise de prazo/urgência por IA funciona normalmente, só a busca automática que fica manual.
 2. **Google Calendar.** Configure `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` e clique em "Conectar Google Calendar" na Agenda. Sem isso, a Agenda funciona normalmente, só não sincroniza com o Google.
-3. **Geração de imagens para Marketing.** O gerador de conteúdo cria o *prompt* de imagem (texto descritivo); a geração da imagem em si depende de um serviço de IA de imagem (não incluso). O prompt gerado pode ser colado em qualquer gerador de imagens.
-4. **PDF a partir dos documentos gerados (.docx → .pdf).** Requer LibreOffice (`soffice`) instalado no servidor onde o app roda. Se `soffice` não estiver disponível, o sistema continua gerando o `.docx` normalmente (formato editável), só não oferece o botão de baixar `.pdf`.
+3. **PDF a partir dos documentos gerados (.docx → .pdf).** Requer LibreOffice (`soffice`) instalado no servidor onde o app roda. Se `soffice` não estiver disponível, o sistema continua gerando o `.docx` normalmente (formato editável), só não oferece o botão de baixar `.pdf`.
+4. **Facebook e Instagram (publicar, agendar, impulsionar).** A integração com a Graph API da Meta já está implementada (`src/lib/meta.ts`) — publicação imediata, agendamento (worker próprio, não depende do agendamento nativo da Meta) e impulsionamento (Marketing API) de posts do Facebook e Instagram. Passos para habilitar:
+   1. Crie um app em [developers.facebook.com](https://developers.facebook.com/apps) (tipo "Empresa").
+   2. Adicione os produtos **Facebook Login for Business** e **Marketing API** ao app.
+   3. Em **App Review**, solicite as permissões: `pages_show_list`, `pages_manage_posts`, `pages_read_engagement`, `instagram_basic`, `instagram_content_publish`, `ads_management`, `business_management`. A Meta exige **verificação de negócio** (Business Verification) para liberar a maioria dessas permissões em modo de produção (não apenas para usuários de teste do app) — esse processo pode levar de alguns dias a semanas, então vale iniciar com antecedência.
+   4. Copie o **App ID** e o **App Secret** (em Configurações → Básico) e defina `META_APP_ID` / `META_APP_SECRET` nas variáveis de ambiente do Railway. Defina também `PUBLIC_BASE_URL` com a URL pública do sistema (ex.: `https://seuapp.up.railway.app`) — a Meta precisa buscar as imagens geradas por essa URL.
+   5. Em **Facebook Login for Business → Configurações**, adicione a URI de redirecionamento OAuth: `https://SEU_DOMINIO/api/integrations/meta/callback`.
+   6. Sua conta do Facebook precisa administrar a **Página** do escritório, e essa Página precisa estar vinculada à **conta comercial do Instagram** (Meta Business Suite → Configurações → Contas vinculadas) para publicar no Instagram. Para impulsionar, é necessário ter uma **conta de anúncios** com forma de pagamento cadastrada no Meta Business Manager.
+   7. Clique em **"Conectar Facebook/Instagram"** na página de uma campanha em Marketing e autorize.
+   8. Para o agendamento funcionar, chame periodicamente (a cada 5-15 min) `POST /api/social/cron` por um agendador externo (com o header `x-cron-secret` se `CRON_SECRET` estiver definido) — igual ao cron de publicações.
+
+   **Sobre o impulsionamento:** o sistema cria a campanha/conjunto/anúncio sempre com status **PAUSADO** — nada é cobrado até você revisar e ativar manualmente (pelo botão no sistema ou direto no Meta Ads Manager). A OAB permite impulsionar conteúdo informativo, mas não anúncio com oferta de serviço — por isso é exigida uma confirmação explícita antes de criar a campanha.
+
+   Sem essas credenciais, a geração de conteúdo e das imagens continua funcionando normalmente — só os botões de publicar/agendar/impulsionar ficam indisponíveis.
 
 ## Módulos
 
@@ -69,7 +81,7 @@ O sistema foi construído com esses pontos já prontos no código, mas alguns de
 - **Clientes** — cadastro completo (PF/PJ), upload de documentos, geração de Procuração e Contrato de Honorários (com o timbrado oficial), confirmação de assinatura do contrato e controle de parcelas ligado ao Financeiro.
 - **Agenda** — reuniões, compromissos, audiências, prazos e tarefas; integração opcional com Google Calendar.
 - **Publicações** — importação manual (ou automática, uma vez configurado o provedor), reconhecimento do advogado citado, sugestão de tarefa/prazo/urgência por IA, e envio direto para a Agenda.
-- **Marketing** — campanhas por área do direito, geração de posts/legendas/artigos/prompts de imagem por IA, e acompanhamento automático de novos processos/clientes gerados durante a campanha.
+- **Marketing** — campanhas por área do direito; geração por IA de carrossel/post/reels para Instagram, post para Facebook e artigo de blog, seguindo a estrutura de conteúdo compatível com a OAB (situação → base normativa → nuance → fechamento informativo), com imagens já geradas automaticamente (sem depender de API paga de imagem); publicação, agendamento e impulsionamento diretos no Facebook/Instagram via integração com a Meta; acompanhamento automático de novos processos/clientes gerados durante a campanha.
 - **Financeiro** — contas bancárias, lançamentos manuais, importação de extrato (CSV, OFX/QFX, PDF ou TXT), análise mensal e projeção para os próximos 3 meses.
 - **Advogados** — cadastro de advogados/colaboradores, usado no reconhecimento de publicações e atribuição de tarefas.
 - **Meus Modelos** — upload de modelos `.docx` com variáveis (`{{cliente_nome}}` etc.), geração personalizada para um cliente específico, exportação em `.docx` e `.pdf`.

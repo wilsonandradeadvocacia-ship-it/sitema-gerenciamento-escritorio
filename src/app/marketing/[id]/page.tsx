@@ -4,28 +4,35 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Card, PageHeader, Kpi } from "@/components/ui";
-import { ArrowLeft, Sparkles, Loader2, ImageIcon } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Link2 } from "lucide-react";
 import { AREA_LABEL } from "@/lib/constants";
-import ReactMarkdownFallback from "@/components/MarkdownText";
+import MarketingContentCard from "./MarketingContentCard";
 
 const CONTENT_TYPES = [
-  { value: "post", label: "Post" },
-  { value: "legenda", label: "Legenda" },
+  { value: "instagram_carousel", label: "Carrossel Instagram" },
+  { value: "instagram_post", label: "Post único Instagram" },
+  { value: "instagram_reels", label: "Roteiro Reels" },
+  { value: "facebook_post", label: "Post Facebook" },
   { value: "artigo", label: "Artigo de blog" },
-  { value: "imagem_prompt", label: "Prompt de imagem (IA)" },
 ];
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [campaign, setCampaign] = useState<any>(null);
-  const [type, setType] = useState("post");
+  const [type, setType] = useState("instagram_carousel");
   const [brief, setBrief] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [meta, setMeta] = useState<{ configured: boolean; connected: boolean; pageName: string | null; hasInstagram: boolean } | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
 
   function load() {
     fetch(`/api/marketing/campanhas/${id}`).then((r) => r.json()).then(setCampaign);
+    fetch("/api/social/posts").then((r) => r.json()).then(setPosts);
   }
   useEffect(load, [id]);
+  useEffect(() => {
+    fetch("/api/integrations/meta/status").then((r) => r.json()).then(setMeta);
+  }, []);
 
   async function generate() {
     setGenerating(true);
@@ -49,7 +56,26 @@ export default function CampaignDetailPage() {
       <Link href="/marketing" className="inline-flex items-center gap-1 text-xs text-navy-400 hover:text-navy-700 mb-3">
         <ArrowLeft size={14} /> Voltar para Marketing
       </Link>
-      <PageHeader title={campaign.name} subtitle={`${AREA_LABEL[campaign.area] ?? campaign.area} · desde ${new Date(campaign.startDate).toLocaleDateString("pt-BR")}`} />
+      <PageHeader
+        title={campaign.name}
+        subtitle={`${AREA_LABEL[campaign.area] ?? campaign.area} · desde ${new Date(campaign.startDate).toLocaleDateString("pt-BR")}`}
+        actions={
+          meta &&
+          (meta.connected ? (
+            <span className="badge bg-emerald-100 text-emerald-800 border-emerald-200">
+              <Link2 size={12} className="mr-1" /> {meta.pageName} conectado
+            </span>
+          ) : (
+            <a
+              href="/api/integrations/meta/auth"
+              className="btn-secondary text-xs py-1.5"
+              title={meta.configured ? "Conectar Facebook/Instagram" : "Configure META_APP_ID/SECRET no .env"}
+            >
+              <Link2 size={14} /> {meta.configured ? "Conectar Facebook/Instagram" : "Meta (não configurado)"}
+            </a>
+          ))
+        }
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Kpi label="Novos processos na área" value={campaign.auto.newProcesses} hint="Durante o período da campanha" />
@@ -76,7 +102,7 @@ export default function CampaignDetailPage() {
           </select>
           <input
             className="input flex-1"
-            placeholder="Tema ou objetivo (ex: prazo para restituição de IR, direitos do consumidor em compras online...)"
+            placeholder="Tema ou objetivo (ex: aviso prévio proporcional, cláusula abusiva em contrato de adesão...)"
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
           />
@@ -85,26 +111,15 @@ export default function CampaignDetailPage() {
             Gerar
           </button>
         </div>
-        <p className="text-xs text-navy-400">O conteúdo segue as diretrizes de publicidade da OAB (Provimento 205/2021): informativo, sem promessa de resultado.</p>
+        <p className="text-xs text-navy-400">
+          Conteúdo estruturado (situação → base normativa → nuance → fechamento informativo) conforme o Provimento 205/2021 da OAB, com imagens geradas
+          automaticamente para Instagram/Facebook.
+        </p>
       </Card>
 
       <div className="space-y-4">
         {campaign.contents.map((c: any) => (
-          <Card key={c.id} className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="badge bg-gold-50 text-gold-700 border-gold-200">{CONTENT_TYPES.find((t) => t.value === c.type)?.label}</span>
-              <span className="text-xs text-navy-400">{new Date(c.createdAt).toLocaleDateString("pt-BR")}</span>
-            </div>
-            {c.title && <p className="text-sm font-medium text-navy-700 mb-2">{c.title}</p>}
-            {c.type === "imagem_prompt" ? (
-              <div className="rounded-lg bg-navy-50 p-4 text-sm text-navy-600 flex items-start gap-2">
-                <ImageIcon size={16} className="text-navy-400 mt-0.5 shrink-0" />
-                <span>{c.content}</span>
-              </div>
-            ) : (
-              <ReactMarkdownFallback text={c.content} />
-            )}
-          </Card>
+          <MarketingContentCard key={c.id} content={c} allPosts={posts} hasInstagram={!!meta?.hasInstagram} onChanged={load} />
         ))}
         {campaign.contents.length === 0 && <p className="text-sm text-navy-400">Nenhum conteúdo gerado ainda.</p>}
       </div>
