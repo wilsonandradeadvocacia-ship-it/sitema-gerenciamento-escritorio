@@ -1,31 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { v4 as uuid } from 'uuid'
-import type {
-  Cliente,
-  ContratoHonorarios,
-  EscritorioConfig,
-  EventoAgenda,
-  LancamentoFinanceiro,
-  ParcelaContrato,
-  TabelaHonorariosOAB,
-} from '../types'
-import { TABELAS_HONORARIOS_PADRAO } from '../data/tabelasHonorarios'
-
-const ESCRITORIO_PADRAO: EscritorioConfig = {
-  nomeEscritorio: '[Nome do Escritório de Advocacia]',
-  nomeAdvogadoResponsavel: '[Nome do(a) Advogado(a) responsável]',
-  oabNumero: '[nº]',
-  oabUf: 'SP',
-  cpfCnpj: '[CPF/CNPJ]',
-  endereco: '[Endereço completo do escritório]',
-}
-
-function addMonths(dateStr: string, months: number): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  d.setMonth(d.getMonth() + months)
-  return d.toISOString().slice(0, 10)
-}
+import { apiFetch } from '../api/client'
+import type { Cliente, ContratoHonorarios, EventoAgenda, LancamentoFinanceiro, TabelaHonorariosOAB } from '../types'
 
 interface Store {
   clientes: Cliente[]
@@ -33,15 +8,16 @@ interface Store {
   lancamentos: LancamentoFinanceiro[]
   eventos: EventoAgenda[]
   tabelasOAB: Record<string, TabelaHonorariosOAB>
-  escritorio: EscritorioConfig
+  carregado: boolean
 
-  updateEscritorio: (patch: Partial<EscritorioConfig>) => void
+  carregarTudo: () => Promise<void>
+  limpar: () => void
 
-  addCliente: (c: Omit<Cliente, 'id' | 'criadoEm'>) => Cliente
-  updateCliente: (id: string, patch: Partial<Cliente>) => void
-  removeCliente: (id: string) => void
+  addCliente: (c: Omit<Cliente, 'id' | 'criadoEm'>) => Promise<Cliente>
+  updateCliente: (id: string, patch: Partial<Cliente>) => Promise<void>
+  removeCliente: (id: string) => Promise<void>
 
-  updateTabelaOAB: (uf: string, tabela: TabelaHonorariosOAB) => void
+  updateTabelaOAB: (uf: string, tabela: TabelaHonorariosOAB) => Promise<void>
 
   criarContrato: (input: {
     clienteId: string
@@ -56,195 +32,130 @@ interface Store {
     primeiraParcelaData: string
     clausulasAdicionais?: string
     procuracaoPoderes?: string
-  }) => ContratoHonorarios
+  }) => Promise<ContratoHonorarios>
 
-  assinarContrato: (contratoId: string) => void
-  cancelarContrato: (contratoId: string) => void
+  assinarContrato: (contratoId: string) => Promise<void>
+  cancelarContrato: (contratoId: string) => Promise<void>
 
-  marcarParcelaRecebida: (lancamentoId: string, dataRecebimento: string) => void
+  marcarParcelaRecebida: (lancamentoId: string, dataRecebimento: string) => Promise<void>
 
-  addEvento: (e: Omit<EventoAgenda, 'id' | 'concluido'>) => void
-  toggleEventoConcluido: (id: string) => void
-  removeEvento: (id: string) => void
+  addEvento: (e: Omit<EventoAgenda, 'id' | 'concluido'>) => Promise<void>
+  toggleEventoConcluido: (id: string) => Promise<void>
+  removeEvento: (id: string) => Promise<void>
 }
 
-function gerarParcelas(
-  valorTotal: number,
-  numeroParcelas: number,
-  primeiraData: string,
-  formaPagamento: ContratoHonorarios['formaPagamento'],
-): ParcelaContrato[] {
-  const n = Math.max(1, numeroParcelas)
-  const valorParcela = Math.round((valorTotal / n) * 100) / 100
-  const parcelas: ParcelaContrato[] = []
-  let somaAcumulada = 0
-  for (let i = 0; i < n; i++) {
-    const isUltima = i === n - 1
-    const valor = isUltima ? Math.round((valorTotal - somaAcumulada) * 100) / 100 : valorParcela
-    somaAcumulada += valor
-    parcelas.push({
-      id: uuid(),
-      numero: i + 1,
-      descricao:
-        formaPagamento === 'mensal_continuado'
-          ? `Mensalidade ${i + 1}`
-          : n === 1
-          ? 'Pagamento único'
-          : `Parcela ${i + 1}/${n}`,
-      valor,
-      dataVencimento: addMonths(primeiraData, i),
-      status: 'previsto',
+export const useStore = create<Store>()((set, get) => ({
+  clientes: [],
+  contratos: [],
+  lancamentos: [],
+  eventos: [],
+  tabelasOAB: {},
+  carregado: false,
+
+  carregarTudo: async () => {
+    const [clientes, contratos, lancamentos, eventos, tabelas] = await Promise.all([
+      apiFetch<Cliente[]>('/api/clientes'),
+      apiFetch<ContratoHonorarios[]>('/api/contratos'),
+      apiFetch<LancamentoFinanceiro[]>('/api/lancamentos'),
+      apiFetch<EventoAgenda[]>('/api/eventos'),
+      apiFetch<TabelaHonorariosOAB[]>('/api/tabelas-oab'),
+    ])
+    set({
+      clientes,
+      contratos,
+      lancamentos,
+      eventos,
+      tabelasOAB: Object.fromEntries(tabelas.map((t) => [t.uf, t])),
+      carregado: true,
     })
-  }
-  return parcelas
-}
+  },
 
-export const useStore = create<Store>()(
-  persist(
-    (set, get) => ({
-      clientes: [],
-      contratos: [],
-      lancamentos: [],
-      eventos: [],
-      tabelasOAB: TABELAS_HONORARIOS_PADRAO,
-      escritorio: ESCRITORIO_PADRAO,
+  limpar: () =>
+    set({ clientes: [], contratos: [], lancamentos: [], eventos: [], tabelasOAB: {}, carregado: false }),
 
-      updateEscritorio: (patch) => set((s) => ({ escritorio: { ...s.escritorio, ...patch } })),
+  addCliente: async (c) => {
+    const cliente = await apiFetch<Cliente>('/api/clientes', { method: 'POST', body: JSON.stringify(c) })
+    set((s) => ({ clientes: [cliente, ...s.clientes] }))
+    return cliente
+  },
+  updateCliente: async (id, patch) => {
+    const cliente = await apiFetch<Cliente>(`/api/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
+    set((s) => ({ clientes: s.clientes.map((c) => (c.id === id ? cliente : c)) }))
+  },
+  removeCliente: async (id) => {
+    await apiFetch(`/api/clientes/${id}`, { method: 'DELETE' })
+    set((s) => ({ clientes: s.clientes.filter((c) => c.id !== id) }))
+  },
 
-      addCliente: (c) => {
-        const cliente: Cliente = { ...c, id: uuid(), criadoEm: new Date().toISOString() }
-        set((s) => ({ clientes: [...s.clientes, cliente] }))
-        return cliente
-      },
-      updateCliente: (id, patch) =>
-        set((s) => ({ clientes: s.clientes.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
-      removeCliente: (id) => set((s) => ({ clientes: s.clientes.filter((c) => c.id !== id) })),
+  updateTabelaOAB: async (uf, tabela) => {
+    const atualizada = await apiFetch<TabelaHonorariosOAB>(`/api/tabelas-oab/${uf}`, {
+      method: 'PATCH',
+      body: JSON.stringify(tabela),
+    })
+    set((s) => ({ tabelasOAB: { ...s.tabelasOAB, [uf]: atualizada } }))
+  },
 
-      updateTabelaOAB: (uf, tabela) =>
-        set((s) => ({ tabelasOAB: { ...s.tabelasOAB, [uf]: tabela } })),
+  criarContrato: async (input) => {
+    const contrato = await apiFetch<ContratoHonorarios>('/api/contratos', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+    set((s) => ({ contratos: [contrato, ...s.contratos] }))
+    return contrato
+  },
 
-      criarContrato: (input) => {
-        const parcelas = gerarParcelas(
-          input.valorHonorarios,
-          input.numeroParcelas,
-          input.primeiraParcelaData,
-          input.formaPagamento,
-        )
-        const contrato: ContratoHonorarios = {
-          id: uuid(),
-          criadoEm: new Date().toISOString(),
-          clienteId: input.clienteId,
-          uf: input.uf,
-          servico: input.servico,
-          descricaoServico: input.descricaoServico,
-          origemValor: input.origemValor,
-          itemTabelaId: input.itemTabelaId,
-          valorHonorarios: input.valorHonorarios,
-          formaPagamento: input.formaPagamento,
-          numeroParcelas: input.numeroParcelas,
-          primeiraParcelaData: input.primeiraParcelaData,
-          parcelas,
-          clausulasAdicionais: input.clausulasAdicionais,
-          procuracaoPoderes: input.procuracaoPoderes,
-          assinado: false,
-          status: 'rascunho',
-        }
-        set((s) => ({ contratos: [...s.contratos, contrato] }))
-        return contrato
-      },
+  assinarContrato: async (contratoId) => {
+    const contrato = await apiFetch<ContratoHonorarios>(`/api/contratos/${contratoId}/assinar`, { method: 'POST' })
+    set((s) => ({ contratos: s.contratos.map((c) => (c.id === contratoId ? contrato : c)) }))
+    // recarrega financeiro e agenda, que foram alimentados automaticamente pelo servidor
+    const [lancamentos, eventos] = await Promise.all([
+      apiFetch<LancamentoFinanceiro[]>('/api/lancamentos'),
+      apiFetch<EventoAgenda[]>('/api/eventos'),
+    ])
+    set({ lancamentos, eventos })
+  },
 
-      assinarContrato: (contratoId) => {
-        const contrato = get().contratos.find((c) => c.id === contratoId)
-        if (!contrato || contrato.assinado) return
-        const dataAssinatura = new Date().toISOString()
+  cancelarContrato: async (contratoId) => {
+    const contrato = await apiFetch<ContratoHonorarios>(`/api/contratos/${contratoId}/cancelar`, { method: 'POST' })
+    set((s) => ({ contratos: s.contratos.map((c) => (c.id === contratoId ? contrato : c)) }))
+  },
 
-        set((s) => ({
-          contratos: s.contratos.map((c) =>
-            c.id === contratoId ? { ...c, assinado: true, dataAssinatura, status: 'assinado' } : c,
-          ),
-        }))
+  marcarParcelaRecebida: async (lancamentoId, dataRecebimento) => {
+    const lancamento = await apiFetch<LancamentoFinanceiro>(`/api/lancamentos/${lancamentoId}/marcar-recebido`, {
+      method: 'POST',
+      body: JSON.stringify({ dataRecebimento }),
+    })
+    set((s) => ({
+      lancamentos: s.lancamentos.map((l) => (l.id === lancamentoId ? lancamento : l)),
+      eventos: s.eventos.map((e) => (e.parcelaId === lancamento.parcelaId ? { ...e, concluido: true } : e)),
+      contratos: s.contratos.map((c) =>
+        c.id === lancamento.contratoId
+          ? {
+              ...c,
+              parcelas: c.parcelas.map((p) =>
+                p.id === lancamento.parcelaId ? { ...p, status: 'recebido', dataRecebimento } : p,
+              ),
+            }
+          : c,
+      ),
+    }))
+  },
 
-        const novosLancamentos: LancamentoFinanceiro[] = contrato.parcelas.map((p) => ({
-          id: uuid(),
-          clienteId: contrato.clienteId,
-          contratoId: contrato.id,
-          parcelaId: p.id,
-          descricao: `${contrato.servico} - ${p.descricao}`,
-          valor: p.valor,
-          dataVencimento: p.dataVencimento,
-          status: 'previsto',
-        }))
-
-        const cliente = get().clientes.find((c) => c.id === contrato.clienteId)
-        const novosEventos: EventoAgenda[] = contrato.parcelas.map((p) => ({
-          id: uuid(),
-          titulo: `Recebimento: ${cliente?.nome ?? 'Cliente'} - ${p.descricao}`,
-          data: p.dataVencimento,
-          tipo: 'pagamento',
-          clienteId: contrato.clienteId,
-          contratoId: contrato.id,
-          parcelaId: p.id,
-          valor: p.valor,
-          descricao: contrato.servico,
-          concluido: false,
-        }))
-
-        set((s) => ({
-          lancamentos: [...s.lancamentos, ...novosLancamentos],
-          eventos: [...s.eventos, ...novosEventos],
-        }))
-      },
-
-      cancelarContrato: (contratoId) =>
-        set((s) => ({
-          contratos: s.contratos.map((c) => (c.id === contratoId ? { ...c, status: 'cancelado' } : c)),
-        })),
-
-      marcarParcelaRecebida: (lancamentoId, dataRecebimento) => {
-        set((s) => ({
-          lancamentos: s.lancamentos.map((l) =>
-            l.id === lancamentoId ? { ...l, status: 'recebido', dataRecebimento } : l,
-          ),
-        }))
-        const lanc = get().lancamentos.find((l) => l.id === lancamentoId)
-        if (!lanc) return
-        set((s) => ({
-          contratos: s.contratos.map((c) =>
-            c.id === lanc.contratoId
-              ? {
-                  ...c,
-                  parcelas: c.parcelas.map((p) =>
-                    p.id === lanc.parcelaId ? { ...p, status: 'recebido', dataRecebimento } : p,
-                  ),
-                }
-              : c,
-          ),
-          eventos: s.eventos.map((e) => (e.parcelaId === lanc.parcelaId ? { ...e, concluido: true } : e)),
-        }))
-      },
-
-      addEvento: (e) => set((s) => ({ eventos: [...s.eventos, { ...e, id: uuid(), concluido: false }] })),
-      toggleEventoConcluido: (id) =>
-        set((s) => ({ eventos: s.eventos.map((e) => (e.id === id ? { ...e, concluido: !e.concluido } : e)) })),
-      removeEvento: (id) => set((s) => ({ eventos: s.eventos.filter((e) => e.id !== id) })),
-    }),
-    {
-      name: 'escritorio-honorarios-storage',
-      version: 1,
-      merge: (persisted, current) => {
-        const p = persisted as Partial<Store> | undefined
-        return {
-          ...current,
-          ...p,
-          tabelasOAB: { ...current.tabelasOAB, ...(p?.tabelasOAB ?? {}) },
-        }
-      },
-    },
-  ),
-)
-
-export function calcularStatusParcela(dataVencimento: string, status: ParcelaContrato['status']) {
-  if (status === 'recebido') return 'recebido'
-  const hoje = new Date().toISOString().slice(0, 10)
-  return dataVencimento < hoje ? 'atrasado' : 'previsto'
-}
+  addEvento: async (e) => {
+    const evento = await apiFetch<EventoAgenda>('/api/eventos', { method: 'POST', body: JSON.stringify(e) })
+    set((s) => ({ eventos: [...s.eventos, evento] }))
+  },
+  toggleEventoConcluido: async (id) => {
+    const atual = get().eventos.find((e) => e.id === id)
+    if (!atual) return
+    const evento = await apiFetch<EventoAgenda>(`/api/eventos/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ concluido: !atual.concluido }),
+    })
+    set((s) => ({ eventos: s.eventos.map((e) => (e.id === id ? evento : e)) }))
+  },
+  removeEvento: async (id) => {
+    await apiFetch(`/api/eventos/${id}`, { method: 'DELETE' })
+    set((s) => ({ eventos: s.eventos.filter((e) => e.id !== id) }))
+  },
+}))

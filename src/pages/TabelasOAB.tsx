@@ -16,15 +16,19 @@ export default function TabelasOAB() {
   const [uf, setUf] = useState('SP')
   const tabela = tabelasOAB[uf]
 
+  function tratarErro(err: unknown) {
+    alert(err instanceof Error ? err.message : 'Erro ao salvar tabela.')
+  }
+
   function atualizarItem(item: ItemTabelaHonorarios) {
     updateTabelaOAB(uf, {
       ...tabela,
       itens: tabela.itens.map((i) => (i.id === item.id ? item : i)),
-    })
+    }).catch(tratarErro)
   }
 
   function removerItem(id: string) {
-    updateTabelaOAB(uf, { ...tabela, itens: tabela.itens.filter((i) => i.id !== id) })
+    updateTabelaOAB(uf, { ...tabela, itens: tabela.itens.filter((i) => i.id !== id) }).catch(tratarErro)
   }
 
   function adicionarItem() {
@@ -34,7 +38,7 @@ export default function TabelasOAB() {
         ...tabela.itens,
         { id: uuid(), categoria: 'Novo serviço', tipo: 'fixo', valorMin: 0, valorMax: 0 },
       ],
-    })
+    }).catch(tratarErro)
   }
 
   return (

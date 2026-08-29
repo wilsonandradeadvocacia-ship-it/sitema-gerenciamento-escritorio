@@ -115,7 +115,11 @@ export default function Financeiro() {
                     {l.statusAtual !== 'recebido' && l.statusAtual !== 'cancelado' && (
                       <button
                         className="text-brand-600 hover:underline text-xs"
-                        onClick={() => marcarParcelaRecebida(l.id, todayISO())}
+                        onClick={() =>
+                          marcarParcelaRecebida(l.id, todayISO()).catch((err) =>
+                            alert(err instanceof Error ? err.message : 'Erro ao marcar como recebido.'),
+                          )
+                        }
                       >
                         Marcar como recebido
                       </button>

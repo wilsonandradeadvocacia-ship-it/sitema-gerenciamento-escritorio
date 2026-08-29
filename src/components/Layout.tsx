@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const links = [
   { to: '/', label: 'Visão geral', end: true },
@@ -10,11 +11,19 @@ const links = [
 ]
 
 export default function Layout() {
+  const { usuario, escritorio, logout } = useAuth()
+  const navigate = useNavigate()
+
+  function sair() {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <div className="min-h-screen flex">
       <aside className="no-print w-64 shrink-0 bg-brand-900 text-white flex flex-col">
         <div className="px-5 py-6 border-b border-white/10">
-          <div className="text-lg font-serif font-semibold leading-tight">Escritório</div>
+          <div className="text-lg font-serif font-semibold leading-tight">{escritorio?.nomeEscritorio || 'Escritório'}</div>
           <div className="text-xs text-brand-200">Gestão &amp; Honorários</div>
         </div>
         <nav className="flex-1 py-4">
@@ -35,8 +44,11 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="px-5 py-4 text-[11px] text-brand-300 border-t border-white/10">
-          Dados salvos localmente neste navegador.
+        <div className="px-5 py-4 border-t border-white/10">
+          {usuario && <div className="text-xs text-brand-100 mb-2 truncate">{usuario.nome}</div>}
+          <button onClick={sair} className="text-xs text-brand-300 hover:text-white hover:underline">
+            Sair
+          </button>
         </div>
       </aside>
       <main className="flex-1 min-w-0 bg-slate-50">

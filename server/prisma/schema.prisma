@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Escritorio {
+  id                      String   @id @default(cuid())
+  nomeEscritorio          String
+  nomeAdvogadoResponsavel String
+  oabNumero               String
+  oabUf                   String
+  cpfCnpj                 String
+  endereco                String
+  createdAt               DateTime @default(now())
+
+  users       User[]
+  clientes    Cliente[]
+  contratos   Contrato[]
+  lancamentos LancamentoFinanceiro[]
+  eventos     EventoAgenda[]
+  tabelasOAB  TabelaOAB[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  escritorioId String
+  escritorio   Escritorio @relation(fields: [escritorioId], references: [id])
+  nome         String
+  email        String   @unique
+  senhaHash    String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
+
+model Cliente {
+  id               String   @id @default(cuid())
+  escritorioId     String
+  escritorio       Escritorio @relation(fields: [escritorioId], references: [id])
+  nome             String
+  tipo             String
+  cpfCnpj          String
+  email            String
+  telefone         String
+  endereco         String
+  cidade           String
+  uf               String
+  profissaoOuRamo  String
+  estadoCivil      String?
+  nacionalidade    String?
+  observacoes      String?
+  criadoEm         DateTime @default(now())
+
+  contratos   Contrato[]
+  lancamentos LancamentoFinanceiro[]
+  eventos     EventoAgenda[]
+}
+
+model Contrato {
+  id                  String   @id @default(cuid())
+  escritorioId        String
+  escritorio          Escritorio @relation(fields: [escritorioId], references: [id])
+  clienteId           String
+  cliente             Cliente  @relation(fields: [clienteId], references: [id])
+  criadoEm            DateTime @default(now())
+  uf                  String
+  servico             String
+  descricaoServico    String
+  origemValor         String
+  itemTabelaId        String?
+  valorHonorarios     Float
+  formaPagamento      String
+  numeroParcelas      Int
+  primeiraParcelaData String
+  parcelasJson        String
+  clausulasAdicionais String?
+  procuracaoPoderes   String?
+  assinado            Boolean  @default(false)
+  dataAssinatura      String?
+  status              String   @default("rascunho")
+
+  lancamentos LancamentoFinanceiro[]
+  eventos     EventoAgenda[]
+}
+
+model LancamentoFinanceiro {
+  id               String   @id @default(cuid())
+  escritorioId     String
+  escritorio       Escritorio @relation(fields: [escritorioId], references: [id])
+  clienteId        String
+  cliente          Cliente  @relation(fields: [clienteId], references: [id])
+  contratoId       String
+  contrato         Contrato @relation(fields: [contratoId], references: [id])
+  parcelaId        String
+  descricao        String
+  valor            Float
+  dataVencimento   String
+  dataRecebimento  String?
+  status           String   @default("previsto")
+}
+
+model EventoAgenda {
+  id           String   @id @default(cuid())
+  escritorioId String
+  escritorio   Escritorio @relation(fields: [escritorioId], references: [id])
+  titulo       String
+  data         String
+  tipo         String
+  clienteId    String?
+  cliente      Cliente?  @relation(fields: [clienteId], references: [id])
+  contratoId   String?
+  contrato     Contrato? @relation(fields: [contratoId], references: [id])
+  parcelaId    String?
+  valor        Float?
+  descricao    String?
+  concluido    Boolean   @default(false)
+}
+
+model TabelaOAB {
+  id            String @id @default(cuid())
+  escritorioId  String
+  escritorio    Escritorio @relation(fields: [escritorioId], references: [id])
+  uf            String
+  nomeSeccional String
+  vigencia      String
+  fonteUrl      String?
+  statusDados   String
+  itensJson     String
+
+  @@unique([escritorioId, uf])
+}

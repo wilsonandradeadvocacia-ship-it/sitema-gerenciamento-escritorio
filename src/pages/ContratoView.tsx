@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
+import { useAuth } from '../context/AuthContext'
 import { formatBRL, formatDate, todayISO } from '../lib/format'
 
 export default function ContratoView() {
   const { id } = useParams()
-  const { contratos, clientes, escritorio, assinarContrato, updateEscritorio } = useStore()
+  const { contratos, clientes, assinarContrato } = useStore()
+  const { escritorio, atualizarEscritorio: updateEscritorio } = useAuth()
   const contrato = contratos.find((c) => c.id === id)
   const cliente = clientes.find((c) => c.id === contrato?.clienteId)
   const [confirmando, setConfirmando] = useState(false)
   const [editandoEscritorio, setEditandoEscritorio] = useState(false)
 
-  if (!contrato || !cliente) {
+  if (!contrato || !cliente || !escritorio) {
     return (
       <div className="p-8">
         <p className="text-slate-500">Contrato não encontrado.</p>

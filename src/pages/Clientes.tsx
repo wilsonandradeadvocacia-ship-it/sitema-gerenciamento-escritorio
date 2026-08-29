@@ -29,15 +29,19 @@ export default function Clientes() {
     setForm((f) => ({ ...f, [k]: v }))
   }
 
-  function salvar() {
+  async function salvar() {
     if (!form.nome.trim() || !form.cpfCnpj.trim()) return
-    if (editandoId) {
-      updateCliente(editandoId, form)
-      setEditandoId(null)
-    } else {
-      addCliente(form)
+    try {
+      if (editandoId) {
+        await updateCliente(editandoId, form)
+        setEditandoId(null)
+      } else {
+        await addCliente(form)
+      }
+      setForm(vazio)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao salvar cliente.')
     }
-    setForm(vazio)
   }
 
   function editar(c: Cliente) {
@@ -195,7 +199,10 @@ export default function Clientes() {
                   <button onClick={() => editar(c)} className="text-brand-600 hover:underline">
                     Editar
                   </button>
-                  <button onClick={() => removeCliente(c.id)} className="text-red-500 hover:underline">
+                  <button
+                    onClick={() => removeCliente(c.id).catch((err) => alert(err instanceof Error ? err.message : 'Erro ao excluir cliente.'))}
+                    className="text-red-500 hover:underline"
+                  >
                     Excluir
                   </button>
                 </td>

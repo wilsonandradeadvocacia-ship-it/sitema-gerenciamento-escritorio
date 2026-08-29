@@ -48,23 +48,27 @@ export default function Calculadora() {
 
   const clienteSelecionado = clientes.find((c) => c.id === clienteId)
 
-  function gerarContrato() {
+  async function gerarContrato() {
     if (!clienteId || !descricaoServico.trim() || valorFinal <= 0) return
     const servicoNome = item ? item.categoria : 'Serviço advocatício (honorários definidos manualmente)'
-    const contrato = criarContrato({
-      clienteId,
-      uf,
-      servico: servicoNome,
-      descricaoServico,
-      origemValor,
-      itemTabelaId: item?.id,
-      valorHonorarios: valorFinal,
-      formaPagamento,
-      numeroParcelas: formaPagamento === 'avista' ? 1 : numeroParcelas,
-      primeiraParcelaData,
-      procuracaoPoderes: poderes,
-    })
-    navigate(`/contratos/${contrato.id}`)
+    try {
+      const contrato = await criarContrato({
+        clienteId,
+        uf,
+        servico: servicoNome,
+        descricaoServico,
+        origemValor,
+        itemTabelaId: item?.id,
+        valorHonorarios: valorFinal,
+        formaPagamento,
+        numeroParcelas: formaPagamento === 'avista' ? 1 : numeroParcelas,
+        primeiraParcelaData,
+        procuracaoPoderes: poderes,
+      })
+      navigate(`/contratos/${contrato.id}`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao gerar contrato.')
+    }
   }
 
   return (

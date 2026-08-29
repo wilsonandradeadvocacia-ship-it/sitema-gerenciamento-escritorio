@@ -63,11 +63,15 @@ export default function Agenda() {
     [eventos],
   )
 
-  function salvarEvento() {
+  async function salvarEvento() {
     if (!titulo.trim()) return
-    addEvento({ titulo, data, tipo, descricao: '' })
-    setTitulo('')
-    setNovoAberto(false)
+    try {
+      await addEvento({ titulo, data, tipo, descricao: '' })
+      setTitulo('')
+      setNovoAberto(false)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao salvar compromisso.')
+    }
   }
 
   return (
@@ -189,14 +193,14 @@ export default function Agenda() {
                   <div className="flex flex-col items-end gap-1">
                     <button
                       className="text-[11px] text-brand-600 hover:underline"
-                      onClick={() => toggleEventoConcluido(e.id)}
+                      onClick={() => toggleEventoConcluido(e.id).catch((err) => alert(err instanceof Error ? err.message : 'Erro ao atualizar evento.'))}
                     >
                       Concluir
                     </button>
                     {!e.contratoId && (
                       <button
                         className="text-[11px] text-red-500 hover:underline"
-                        onClick={() => removeEvento(e.id)}
+                        onClick={() => removeEvento(e.id).catch((err) => alert(err instanceof Error ? err.message : 'Erro ao remover evento.'))}
                       >
                         Remover
                       </button>
