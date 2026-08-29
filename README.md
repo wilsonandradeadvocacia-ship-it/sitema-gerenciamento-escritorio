@@ -41,24 +41,42 @@ Acesse `http://localhost:5173/registro` para criar a conta do escritório.
 ## Deploy (publicar para os clientes usarem)
 
 Este é o ponto principal para transformar o sistema em um produto vendável:
-ninguém deve precisar rodar comandos no terminal.
+ninguém deve precisar rodar comandos no terminal. A combinação recomendada
+(mais simples de configurar pelo painel web, sem usar linha de comando):
 
-**Backend + banco de dados:**
-- SQLite (padrão atual) funciona bem em serviços com disco persistente, como
-  Railway, Render ou Fly.io — são as opções mais simples para começar.
-- Para plataformas serverless (Vercel, por exemplo), SQLite **não funciona**
-  porque o sistema de arquivos é temporário. Nesse caso é necessário trocar
-  para Postgres (ex.: Neon, Supabase, Railway Postgres) — basta alterar
-  `provider` e `DATABASE_URL` em `server/prisma/schema.prisma` e rodar
-  `prisma migrate deploy` novamente; o restante do código não muda.
-- Configure as variáveis de ambiente em produção: `DATABASE_URL`,
-  `JWT_SECRET` (gere um valor aleatório forte) e `CORS_ORIGIN` (domínio do
-  frontend publicado).
+- **Backend + banco de dados → Railway** (tem disco persistente, funciona
+  direto com SQLite). Repositório já vem com `server/railway.toml`
+  configurado e `npm start` já roda as migrações do banco automaticamente a
+  cada deploy.
+  1. Crie uma conta em railway.app (dá para entrar direto com o GitHub).
+  2. New Project → Deploy from GitHub repo → selecione este repositório.
+  3. Nas configurações do serviço, defina **Root Directory** como `server`.
+  4. Adicione um **Volume** (aba Volumes), montado em `/data`.
+  5. Em Variables, adicione:
+     - `DATABASE_URL` = `file:/data/dev.db`
+     - `JWT_SECRET` = uma string aleatória longa (gere uma nova, não reuse)
+     - `CORS_ORIGIN` = a URL do frontend (você preenche isso depois de
+       publicar o frontend no passo seguinte)
+  6. Gere um domínio público para o serviço (Settings → Networking →
+     Generate Domain). Essa é a URL da API.
 
-**Frontend:**
-- Publique como site estático (Vercel, Netlify, Cloudflare Pages) com
-  `npm run build` gerando a pasta `dist/`.
-- Configure `VITE_API_URL` apontando para a URL pública do backend.
+- **Frontend → Vercel** (site estático, plano gratuito). Repositório já vem
+  com `vercel.json` configurado para as rotas do React funcionarem.
+  1. Crie uma conta em vercel.com (dá para entrar com o GitHub).
+  2. Add New → Project → importe este repositório (mantenha o Root
+     Directory como a raiz do projeto — não é a pasta `server`).
+  3. Em Environment Variables, adicione `VITE_API_URL` com a URL pública
+     gerada pelo Railway no passo anterior.
+  4. Deploy. A URL gerada pela Vercel é o link final do sistema.
+  5. Volte no Railway e atualize a variável `CORS_ORIGIN` com essa URL da
+     Vercel, depois faça um redeploy do serviço do backend.
+
+Para plataformas totalmente serverless no lugar do Railway (a própria Vercel
+para o backend, por exemplo), SQLite **não funciona** porque o sistema de
+arquivos é temporário — nesse caso é necessário trocar para Postgres (ex.:
+Neon, Supabase): basta alterar `provider` e `DATABASE_URL` em
+`server/prisma/schema.prisma` e rodar `prisma migrate deploy` novamente; o
+restante do código não muda.
 
 ## Sobre as tabelas de honorários da OAB
 
