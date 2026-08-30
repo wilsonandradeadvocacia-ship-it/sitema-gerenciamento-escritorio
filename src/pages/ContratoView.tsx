@@ -33,7 +33,10 @@ export default function ContratoView() {
         }/${cliente.uf}`
       : `${cliente.nome}, pessoa jurídica inscrita no CNPJ nº ${cliente.cpfCnpj}, com sede em ${cliente.endereco}, ${cliente.cidade}/${cliente.uf}, neste ato representada na forma de seu contrato/estatuto social`
 
-  const qualificacaoEscritorio = `${escritorio.nomeAdvogadoResponsavel}, inscrito(a) na ${escritorio.oabUf > '' ? `OAB/${escritorio.oabUf}` : 'OAB'} sob o nº ${escritorio.oabNumero}, integrante de ${escritorio.nomeEscritorio}, CPF/CNPJ nº ${escritorio.cpfCnpj}, com endereço profissional em ${escritorio.endereco}`
+  const qualificacaoEscritorio = `${escritorio.nomeEscritorio}, inscrito(a) no CNPJ/CPF sob o nº ${escritorio.cpfCnpj}, com escritório profissional em ${escritorio.endereco}, neste ato representado(a) por ${escritorio.nomeAdvogadoResponsavel}, advogado(a) inscrito(a) na OAB/${escritorio.oabUf} sob o nº ${escritorio.oabNumero}`
+
+  let numeroClausula = 0
+  const proximaClausula = () => `${++numeroClausula}ª`
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
@@ -134,9 +137,7 @@ export default function ContratoView() {
 
       <div id="print-area" className="card p-10 font-serif text-[13px] leading-relaxed text-slate-800 space-y-6">
         <section>
-          <h2 className="text-center font-semibold text-base uppercase mb-4">
-            Contrato de Prestação de Serviços Advocatícios e Honorários
-          </h2>
+          <h2 className="text-center font-semibold text-base uppercase mb-4">Contrato de Honorários Advocatícios</h2>
           <p>
             <strong>CONTRATANTE:</strong> {qualificacaoCliente}.
           </p>
@@ -144,16 +145,16 @@ export default function ContratoView() {
             <strong>CONTRATADO(A):</strong> {qualificacaoEscritorio}.
           </p>
           <p className="mt-2">
-            As partes acima identificadas têm, entre si, justo e contratado o presente Contrato de Prestação de
-            Serviços Advocatícios, que se regerá pelas cláusulas seguintes e pela legislação aplicável, em
+            As partes acima identificadas têm, entre si, justo e acertado o presente Contrato de Honorários
+            Advocatícios, que se regerá pelas condições descritas no presente e pela legislação aplicável, em
             especial a Lei nº 8.906/94 (Estatuto da OAB) e o Código de Ética e Disciplina da OAB.
           </p>
         </section>
 
         <section>
-          <h3 className="font-semibold mb-1">CLÁUSULA 1ª — DO OBJETO</h3>
+          <h3 className="font-semibold mb-1">DO OBJETO DO CONTRATO</h3>
           <p>
-            O(A) CONTRATADO(A) prestará ao(à) CONTRATANTE serviços advocatícios referentes a:{' '}
+            Cláusula {proximaClausula()}. Prestação de serviço técnico profissional especializado em:{' '}
             <strong>{contrato.servico}</strong>.
           </p>
           <p className="mt-1">{contrato.descricaoServico}</p>
@@ -164,10 +165,32 @@ export default function ContratoView() {
         </section>
 
         <section>
-          <h3 className="font-semibold mb-1">CLÁUSULA 2ª — DOS HONORÁRIOS</h3>
+          <h3 className="font-semibold mb-1">DAS DESPESAS</h3>
           <p>
-            Pelos serviços ora contratados, o(a) CONTRATANTE pagará ao(à) CONTRATADO(A) o valor total de{' '}
-            <strong>{formatBRL(contrato.valorHonorarios)}</strong>, na forma de{' '}
+            Cláusula {proximaClausula()}. Todas as despesas efetuadas pelo(a) CONTRATADO(A), ligadas direta ou
+            indiretamente à prestação do serviço, incluindo-se fotocópias, deslocamentos e demais despesas
+            operacionais, ficarão a cargo do(a) CONTRATADO(A), excetuando-se impostos, taxas, custas processuais
+            e emolumentos cartorários, que correrão por conta do(a) CONTRATANTE.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-semibold mb-1">DA COBRANÇA</h3>
+          <p>
+            Cláusula {proximaClausula()}. As partes acordam que é facultado ao(à) CONTRATADO(A) o direito de
+            realizar a cobrança dos honorários ora pactuados por todos os meios admitidos em direito.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-semibold mb-1">DO TEMPO DE CONTRATAÇÃO E DOS HONORÁRIOS</h3>
+          <p>
+            Cláusula {proximaClausula()}. O presente contrato vigorará a partir da data de sua assinatura até o
+            integral cumprimento das obrigações aqui pactuadas.
+          </p>
+          <p className="mt-2">
+            Cláusula {proximaClausula()}. Pelos serviços ora contratados, o(a) CONTRATANTE pagará ao(à)
+            CONTRATADO(A) o valor total de <strong>{formatBRL(contrato.valorHonorarios)}</strong>, na forma de{' '}
             {contrato.formaPagamento === 'avista'
               ? 'pagamento à vista'
               : contrato.formaPagamento === 'mensal_continuado'
@@ -196,59 +219,74 @@ export default function ContratoView() {
             </tbody>
           </table>
           <p className="mt-2 text-xs text-slate-500">
-            Os honorários ora ajustados não incluem custas judiciais, despesas processuais, emolumentos,
-            taxas, honorários periciais ou de terceiros, que correrão por conta do(a) CONTRATANTE. Não estão
-            aqui incluídos eventuais honorários de sucumbência, que pertencerão ao(à) CONTRATADO(A) nos termos
-            do art. 23 da Lei nº 8.906/94.
+            Não estão aqui incluídos eventuais honorários de sucumbência, que pertencerão ao(à) CONTRATADO(A)
+            nos termos do art. 23 da Lei nº 8.906/94.
           </p>
         </section>
 
         <section>
-          <h3 className="font-semibold mb-1">CLÁUSULA 3ª — DAS OBRIGAÇÕES DAS PARTES</h3>
+          <h3 className="font-semibold mb-1">DA RESCISÃO</h3>
           <p>
-            O(A) CONTRATADO(A) obriga-se a empregar os melhores esforços técnicos na defesa dos interesses
-            do(a) CONTRATANTE, sem garantia de resultado. O(A) CONTRATANTE obriga-se a fornecer, com veracidade
-            e tempestividade, todas as informações e documentos necessários ao bom desempenho do serviço
-            contratado, bem como a efetuar o pagamento dos honorários nas datas pactuadas.
+            Cláusula {proximaClausula()}. As partes poderão, de comum acordo ou não, rescindir, a qualquer
+            tempo, o presente contrato, sem pagamento de qualquer multa contratual, respeitando comunicação
+            prévia de 30 (trinta) dias.
           </p>
-        </section>
-
-        <section>
-          <h3 className="font-semibold mb-1">CLÁUSULA 4ª — DA RESCISÃO</h3>
-          <p>
-            O presente contrato poderá ser rescindido por qualquer das partes, mediante comunicação prévia por
-            escrito, ficando assegurado ao(à) CONTRATADO(A) o direito aos honorários proporcionais aos serviços
-            já prestados até a data da rescisão.
+          <p className="mt-2">
+            Parágrafo único. Em caso de rescisão, ficam assegurados ao(à) CONTRATADO(A) os honorários
+            proporcionais aos serviços já prestados até o momento do término da prestação dos serviços.
           </p>
         </section>
 
         {contrato.clausulasAdicionais && (
           <section>
-            <h3 className="font-semibold mb-1">CLÁUSULA 5ª — DISPOSIÇÕES ADICIONAIS</h3>
-            <p>{contrato.clausulasAdicionais}</p>
+            <h3 className="font-semibold mb-1">DISPOSIÇÕES ADICIONAIS</h3>
+            <p>Cláusula {proximaClausula()}. {contrato.clausulasAdicionais}</p>
           </section>
         )}
 
         <section>
-          <h3 className="font-semibold mb-1">CLÁUSULA FINAL — DO FORO</h3>
+          <h3 className="font-semibold mb-1">DAS DISPOSIÇÕES GERAIS</h3>
           <p>
-            Fica eleito o foro da comarca de {cliente.cidade}/{cliente.uf} para dirimir quaisquer dúvidas
-            oriundas deste contrato.
+            Cláusula {proximaClausula()}. Este contrato enquadra-se no rol dos títulos executivos
+            extrajudiciais, nos termos do art. 784, inciso XII, do Código de Processo Civil, combinado com o
+            art. 24 da Lei nº 8.906/94 (Estatuto da OAB). Em caso de atraso no pagamento, incidirão juros de
+            mora à razão de 1% (um por cento) ao mês.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-semibold mb-1">DA COMUNICAÇÃO</h3>
+          <p>
+            Cláusula {proximaClausula()}. O(A) CONTRATANTE compromete-se a manter atualizados os meios de
+            contato informados neste instrumento, comunicando imediata e inequivocamente ao(à) CONTRATADO(A)
+            qualquer alteração de endereço, telefone ou e-mail.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-semibold mb-1">DO FORO</h3>
+          <p>
+            Cláusula {proximaClausula()}. Para dirimir quaisquer controvérsias oriundas deste contrato, as
+            partes elegem o foro da comarca de {cliente.cidade}/{cliente.uf}, renunciando a qualquer outro, por
+            mais privilegiado que seja.
           </p>
         </section>
 
         <section className="pt-8">
-          <p>{cliente.cidade}/{cliente.uf}, {formatDate(contrato.dataAssinatura || todayISO())}.</p>
-          <div className="grid grid-cols-2 gap-8 mt-10 text-center">
+          <p>
+            Por estarem assim justos e contratados, firmam o presente instrumento, em duas vias de igual teor.
+          </p>
+          <p className="mt-4">
+            {cliente.cidade}/{cliente.uf}, {formatDate(contrato.dataAssinatura || todayISO())}.
+          </p>
+          <div className="grid grid-cols-1 gap-10 mt-12 text-center">
             <div>
-              <div className="border-t border-slate-500 pt-2">{cliente.nome}</div>
-              <div className="text-xs text-slate-500">CONTRATANTE</div>
+              <div className="font-semibold">{cliente.nome}</div>
+              <div className="text-xs text-slate-500 mt-1">Contratante</div>
             </div>
             <div>
-              <div className="border-t border-slate-500 pt-2">{escritorio.nomeAdvogadoResponsavel}</div>
-              <div className="text-xs text-slate-500">
-                CONTRATADO(A) — OAB/{escritorio.oabUf} {escritorio.oabNumero}
-              </div>
+              <div className="font-semibold">{escritorio.nomeEscritorio}</div>
+              <div className="text-xs text-slate-500 mt-1">Contratada</div>
             </div>
           </div>
           {contrato.assinado && (
@@ -260,22 +298,27 @@ export default function ContratoView() {
         </section>
 
         <section className="pt-10 border-t border-dashed border-slate-300 mt-10">
-          <h2 className="text-center font-semibold text-base uppercase mb-4">Procuração Ad Judicia</h2>
+          <h2 className="text-center font-semibold text-base uppercase mb-4">
+            Instrumento de Procuração Particular
+          </h2>
           <p>
-            <strong>OUTORGANTE:</strong> {qualificacaoCliente}.
+            <strong>OUTORGANTE:</strong>
           </p>
-          <p className="mt-2">
-            <strong>OUTORGADO(A):</strong> {qualificacaoEscritorio}.
-          </p>
+          <p className="mt-1">{qualificacaoCliente}.</p>
           <p className="mt-3">
-            Pelo presente instrumento particular de mandato, o(a) OUTORGANTE nomeia e constitui seu(sua)
-            bastante procurador(a) o(a) OUTORGADO(A) acima qualificado(a), a quem confere{' '}
-            {contrato.procuracaoPoderes}
+            <strong>OUTORGADO(A):</strong>
           </p>
-          <p className="mt-4">{cliente.cidade}/{cliente.uf}, {formatDate(contrato.dataAssinatura || todayISO())}.</p>
-          <div className="mt-10 text-center">
-            <div className="border-t border-slate-500 pt-2 inline-block px-16">{cliente.nome}</div>
-            <div className="text-xs text-slate-500">OUTORGANTE</div>
+          <p className="mt-1">{qualificacaoEscritorio}.</p>
+          <p className="mt-3">
+            <strong>PODERES:</strong>
+          </p>
+          <p className="mt-1">{contrato.procuracaoPoderes}</p>
+          <p className="mt-4">
+            {cliente.cidade}/{cliente.uf}, {formatDate(contrato.dataAssinatura || todayISO())}.
+          </p>
+          <div className="mt-12 text-center">
+            <div className="font-semibold">{cliente.nome}</div>
+            <div className="text-xs text-slate-500 mt-1">Outorgante</div>
           </div>
         </section>
       </div>

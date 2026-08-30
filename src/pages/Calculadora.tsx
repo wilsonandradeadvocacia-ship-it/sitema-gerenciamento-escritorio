@@ -6,11 +6,12 @@ import { formatBRL, todayISO } from '../lib/format'
 import type { FormaPagamento, ItemTabelaHonorarios } from '../types'
 
 const PODERES_PADRAO =
-  'poderes gerais para o foro (ad judicia), em conformidade com o art. 105 do CPC, podendo propor ' +
-  'ação e contestá-la, transigir, desistir, renunciar ao direito sobre o qual se funda a ação, receber e dar ' +
-  'quitação, firmar compromisso e receber intimações, podendo ainda substabelecer, com ou sem reserva de ' +
-  'poderes, esta procuração, em uma ou mais pessoas, na forma da lei, especificamente para atuar em favor ' +
-  'do(a) outorgante em relação ao serviço descrito no contrato de honorários correspondente.'
+  'Os da cláusula "Ad Judicia et Extra" e mais os especiais para transigir, desistir, renunciar ao direito ' +
+  'sobre o qual se funda a ação, firmar compromisso, receber e dar quitação, substabelecer com ou sem ' +
+  'reserva de poderes, para representar o(a) outorgante judicial ou extrajudicialmente, defendendo seus ' +
+  'interesses e direitos em qualquer Juízo, grau ou instância, bem como perante qualquer repartição pública ' +
+  'federal, estadual ou municipal, e praticar todos os demais atos necessários ao fiel cumprimento deste ' +
+  'mandato, especificamente em relação ao serviço descrito no contrato de honorários correspondente.'
 
 export default function Calculadora() {
   const navigate = useNavigate()
