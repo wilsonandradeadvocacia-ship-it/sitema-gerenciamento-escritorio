@@ -35,5 +35,9 @@ escritorioRouter.patch('/', async (req: AuthedRequest, res) => {
     agencia: escritorio.agencia ?? undefined,
     conta: escritorio.conta ?? undefined,
     pix: escritorio.pix ?? undefined,
+    ativo: escritorio.ativo,
+    planoStatus: escritorio.planoStatus,
+    trialAte: escritorio.trialAte ?? undefined,
+    dataProximoVencimento: escritorio.dataProximoVencimento ?? undefined,
   })
 })

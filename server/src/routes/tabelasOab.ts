@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js'
+import { requireAssinaturaAtiva } from '../middleware/assinatura.js'
 
 export const tabelasOabRouter = Router()
-tabelasOabRouter.use(requireAuth)
+tabelasOabRouter.use(requireAuth, requireAssinaturaAtiva)
 
 function serializar(t: {
   uf: string

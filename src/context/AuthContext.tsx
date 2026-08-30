@@ -8,6 +8,7 @@ interface Usuario {
   nome: string
   email: string
   role: string
+  superAdmin?: boolean
 }
 
 interface RegistroInput {

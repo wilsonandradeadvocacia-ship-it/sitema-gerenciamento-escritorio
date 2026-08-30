@@ -101,6 +101,10 @@ export interface EscritorioConfig {
   agencia?: string
   conta?: string
   pix?: string
+  ativo?: boolean
+  planoStatus?: string
+  trialAte?: string
+  dataProximoVencimento?: string
 }
 
 export interface LancamentoFinanceiro {

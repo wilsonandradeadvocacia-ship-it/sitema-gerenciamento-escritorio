@@ -8,6 +8,8 @@ import { tabelasOabRouter } from './routes/tabelasOab.js'
 import { contratosRouter } from './routes/contratos.js'
 import { lancamentosRouter } from './routes/lancamentos.js'
 import { eventosRouter } from './routes/eventos.js'
+import { adminRouter } from './routes/admin.js'
+import { assinaturaRouter } from './routes/assinatura.js'
 
 const app = express()
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8787
@@ -25,6 +27,8 @@ app.use('/api/tabelas-oab', tabelasOabRouter)
 app.use('/api/contratos', contratosRouter)
 app.use('/api/lancamentos', lancamentosRouter)
 app.use('/api/eventos', eventosRouter)
+app.use('/api/admin', adminRouter)
+app.use('/api/assinatura', assinaturaRouter)
 
 app.use((_req, res) => res.status(404).json({ error: 'Rota não encontrada.' }))
 

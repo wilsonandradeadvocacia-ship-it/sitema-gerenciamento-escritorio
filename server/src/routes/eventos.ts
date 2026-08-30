@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js'
+import { requireAssinaturaAtiva } from '../middleware/assinatura.js'
 
 export const eventosRouter = Router()
-eventosRouter.use(requireAuth)
+eventosRouter.use(requireAuth, requireAssinaturaAtiva)
 
 eventosRouter.get('/', async (req: AuthedRequest, res) => {
   const eventos = await prisma.eventoAgenda.findMany({

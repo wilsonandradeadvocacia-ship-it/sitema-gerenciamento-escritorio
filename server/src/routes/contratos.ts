@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js'
+import { requireAssinaturaAtiva } from '../middleware/assinatura.js'
 import { gerarParcelas } from '../lib/parcelas.js'
 
 export const contratosRouter = Router()
-contratosRouter.use(requireAuth)
+contratosRouter.use(requireAuth, requireAssinaturaAtiva)
 
 function serializar(c: { parcelasJson: string; [key: string]: unknown }) {
   const { parcelasJson, ...rest } = c

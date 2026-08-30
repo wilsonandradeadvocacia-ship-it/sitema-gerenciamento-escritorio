@@ -121,6 +121,17 @@ export default function Registro() {
             </div>
           </div>
           {erro && <p className="text-sm text-red-600">{erro}</p>}
+          <p className="text-xs text-slate-500">
+            Ao criar a conta, você concorda com os{' '}
+            <Link to="/termos" target="_blank" className="text-brand-600 hover:underline">
+              Termos de Uso
+            </Link>{' '}
+            e a{' '}
+            <Link to="/privacidade" target="_blank" className="text-brand-600 hover:underline">
+              Política de Privacidade
+            </Link>
+            .
+          </p>
           <button type="submit" disabled={carregando} className="btn-primary w-full">
             {carregando ? 'Criando conta...' : 'Criar conta'}
           </button>

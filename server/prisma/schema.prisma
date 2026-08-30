@@ -19,6 +19,12 @@ model Escritorio {
   agencia                 String?
   conta                   String?
   pix                     String?
+  ativo                   Boolean  @default(true)
+  planoStatus             String   @default("trial")
+  trialAte                DateTime?
+  dataProximoVencimento   DateTime?
+  asaasCustomerId         String?
+  asaasSubscriptionId     String?
   createdAt               DateTime @default(now())
 
   users       User[]

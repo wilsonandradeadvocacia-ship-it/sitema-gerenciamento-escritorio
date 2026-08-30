@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js'
+import { requireAssinaturaAtiva } from '../middleware/assinatura.js'
 
 export const lancamentosRouter = Router()
-lancamentosRouter.use(requireAuth)
+lancamentosRouter.use(requireAuth, requireAssinaturaAtiva)
 
 lancamentosRouter.get('/', async (req: AuthedRequest, res) => {
   const lancamentos = await prisma.lancamentoFinanceiro.findMany({

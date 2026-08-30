@@ -4,8 +4,11 @@ import { prisma } from '../lib/prisma.js'
 import { signToken } from '../lib/jwt.js'
 import { buildTabelasParaNovoEscritorio } from '../data/tabelasSeed.js'
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js'
+import { isEmailSuperAdmin } from '../middleware/superAdmin.js'
 
 export const authRouter = Router()
+
+const TRIAL_DIAS = 14
 
 function escritorioPublico(e: {
   id: string
@@ -19,6 +22,10 @@ function escritorioPublico(e: {
   agencia?: string | null
   conta?: string | null
   pix?: string | null
+  ativo: boolean
+  planoStatus: string
+  trialAte: Date | null
+  dataProximoVencimento: Date | null
 }) {
   return {
     id: e.id,
@@ -32,7 +39,15 @@ function escritorioPublico(e: {
     agencia: e.agencia ?? undefined,
     conta: e.conta ?? undefined,
     pix: e.pix ?? undefined,
+    ativo: e.ativo,
+    planoStatus: e.planoStatus,
+    trialAte: e.trialAte ?? undefined,
+    dataProximoVencimento: e.dataProximoVencimento ?? undefined,
   }
+}
+
+function usuarioPublico(u: { id: string; nome: string; email: string; role: string }) {
+  return { id: u.id, nome: u.nome, email: u.email, role: u.role, superAdmin: isEmailSuperAdmin(u.email) }
 }
 
 authRouter.post('/register', async (req, res) => {
@@ -61,6 +76,7 @@ authRouter.post('/register', async (req, res) => {
   }
 
   const senhaHash = await bcrypt.hash(String(senha), 10)
+  const trialAte = new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000)
 
   const escritorio = await prisma.escritorio.create({
     data: {
@@ -70,6 +86,7 @@ authRouter.post('/register', async (req, res) => {
       oabUf: oabUf || 'SP',
       cpfCnpj: cpfCnpj || '',
       endereco: endereco || '',
+      trialAte,
       users: {
         create: {
           nome: nomeUsuario,
@@ -100,7 +117,7 @@ authRouter.post('/register', async (req, res) => {
 
   return res.status(201).json({
     token,
-    user: { id: user.id, nome: user.nome, email: user.email, role: user.role },
+    user: usuarioPublico(user),
     escritorio: escritorioPublico(escritorio),
   })
 })
@@ -126,7 +143,7 @@ authRouter.post('/login', async (req, res) => {
   const token = signToken({ userId: user.id, escritorioId: user.escritorioId })
   return res.json({
     token,
-    user: { id: user.id, nome: user.nome, email: user.email, role: user.role },
+    user: usuarioPublico(user),
     escritorio: escritorioPublico(user.escritorio),
   })
 })
@@ -138,7 +155,7 @@ authRouter.get('/me', requireAuth, async (req: AuthedRequest, res) => {
   })
   if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' })
   return res.json({
-    user: { id: user.id, nome: user.nome, email: user.email, role: user.role },
+    user: usuarioPublico(user),
     escritorio: escritorioPublico(user.escritorio),
   })
 })
