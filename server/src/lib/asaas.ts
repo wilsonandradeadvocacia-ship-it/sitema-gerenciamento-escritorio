@@ -71,7 +71,7 @@ export async function criarAssinatura(input: {
     method: 'POST',
     body: JSON.stringify({
       customer: input.customerId,
-      billingType: 'UNDEFINED',
+      billingType: 'PIX',
       value: input.valor,
       nextDueDate: input.diaVencimento,
       cycle: 'MONTHLY',

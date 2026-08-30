@@ -84,17 +84,22 @@ Além das variáveis acima, o backend (Railway) aceita:
   produção para cobrança real). Sem essa variável, o botão "Assinar agora"
   falha com uma mensagem clara, mas o resto do sistema continua funcionando
   normalmente (o bloqueio por trial ainda funciona).
-- `ASAAS_ENV` = `sandbox` ou `production` (padrão: `sandbox`).
-- `ASAAS_WEBHOOK_TOKEN` = token que você escolhe e cadastra também no painel
-  do Asaas (Configurações → Webhooks), na URL
-  `https://<seu-dominio-railway>/api/assinatura/webhook`, para validar que
-  as notificações de pagamento realmente vêm do Asaas.
-- `VALOR_PLANO_MENSAL` = valor mensal cobrado, em reais (padrão: `97`).
+- `ASAAS_ENV` = `sandbox` ou `production` (padrão: `sandbox`). Precisa bater
+  com o tipo da chave em `ASAAS_API_KEY`: uma chave gerada em
+  sandbox.asaas.com só funciona com `ASAAS_ENV=sandbox`, e uma chave de
+  www.asaas.com só funciona com `ASAAS_ENV=production`.
+- `ASAAS_WEBHOOK_TOKEN` = token que você escolhe (mín. 32 caracteres, o
+  Asaas exige) e cadastra também no painel do Asaas (Integrações →
+  Webhooks), na URL `https://<seu-dominio-railway>/api/assinatura/webhook`,
+  para validar que as notificações de pagamento realmente vêm do Asaas. A
+  cobrança é gerada apenas via **Pix**.
+- `VALOR_PLANO_MENSAL` = valor mensal cobrado, em reais (padrão: `14.9`).
 
-Todo novo escritório cadastrado ganha automaticamente 14 dias de teste
-gratuito. Escritórios já existentes antes deste recurso recebem
-automaticamente um período de teste de 30 dias a partir do deploy dessa
-atualização, para não serem bloqueados sem aviso.
+Escritórios cadastrados **antes** deste recurso existir receberam
+automaticamente um período de teste de 30 dias a partir do deploy que
+introduziu a assinatura, para não serem bloqueados sem aviso. Escritórios
+novos, cadastrados depois disso, não têm período de teste: o acesso já
+começa exigindo assinatura ativa.
 
 Para plataformas totalmente serverless no lugar do Railway (a própria Vercel
 para o backend, por exemplo), SQLite **não funciona** porque o sistema de

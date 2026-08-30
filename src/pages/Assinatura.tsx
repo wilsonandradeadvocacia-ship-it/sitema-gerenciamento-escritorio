@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch, ApiError } from '../api/client'
 import { formatDate } from '../lib/format'
+import { emTrialValido } from '../lib/plano'
 
 export default function Assinatura() {
   const { escritorio } = useAuth()
@@ -10,8 +11,10 @@ export default function Assinatura() {
 
   const planoStatus = escritorio?.planoStatus || 'trial'
   const trialAte = escritorio?.trialAte
-  const trialExpirado = planoStatus === 'trial' && trialAte ? new Date(trialAte) < new Date() : false
-  const emDia = planoStatus === 'ativo' || (planoStatus === 'trial' && !trialExpirado)
+  const trialValido = !!escritorio && emTrialValido(escritorio)
+  const trialExpirado = planoStatus === 'trial' && !!trialAte && !trialValido
+  const semTrial = planoStatus === 'trial' && !trialAte
+  const emDia = planoStatus === 'ativo' || trialValido
 
   async function assinar() {
     setCarregando(true)
@@ -43,8 +46,9 @@ export default function Assinatura() {
             <div className="text-sm text-slate-500">Status atual</div>
             <div className="text-lg font-medium text-slate-800">
               {planoStatus === 'ativo' && 'Assinatura ativa'}
-              {planoStatus === 'trial' && !trialExpirado && 'Período de teste gratuito'}
+              {planoStatus === 'trial' && trialValido && 'Período de teste gratuito'}
               {planoStatus === 'trial' && trialExpirado && 'Período de teste encerrado'}
+              {semTrial && 'Nenhum plano ativo'}
               {planoStatus === 'inadimplente' && 'Pagamento pendente'}
               {planoStatus === 'cancelado' && 'Assinatura cancelada'}
             </div>
@@ -73,8 +77,8 @@ export default function Assinatura() {
         {planoStatus !== 'ativo' && (
           <div className="pt-2 border-t border-slate-100">
             <p className="text-sm text-slate-600 mb-3">
-              Assine o plano mensal para continuar utilizando a calculadora de honorários, contratos, financeiro e
-              agenda sem limitações.
+              Assine o plano mensal (pagamento via Pix) para continuar utilizando a calculadora de honorários,
+              contratos, financeiro e agenda sem limitações.
             </p>
             <button onClick={assinar} disabled={carregando} className="btn-primary">
               {carregando ? 'Processando...' : 'Assinar agora'}

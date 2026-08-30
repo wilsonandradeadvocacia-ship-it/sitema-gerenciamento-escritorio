@@ -5,7 +5,7 @@ import { criarOuObterCliente, criarAssinatura, obterPrimeiraCobranca } from '../
 
 export const assinaturaRouter = Router()
 
-const VALOR_PLANO_MENSAL = Number(process.env.VALOR_PLANO_MENSAL || 97)
+const VALOR_PLANO_MENSAL = Number(process.env.VALOR_PLANO_MENSAL || 14.9)
 
 assinaturaRouter.post('/checkout', requireAuth, async (req: AuthedRequest, res) => {
   const escritorio = await prisma.escritorio.findUnique({ where: { id: req.auth!.escritorioId } })

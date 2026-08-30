@@ -8,8 +8,6 @@ import { isEmailSuperAdmin } from '../middleware/superAdmin.js'
 
 export const authRouter = Router()
 
-const TRIAL_DIAS = 14
-
 function escritorioPublico(e: {
   id: string
   nomeEscritorio: string
@@ -76,7 +74,6 @@ authRouter.post('/register', async (req, res) => {
   }
 
   const senhaHash = await bcrypt.hash(String(senha), 10)
-  const trialAte = new Date(Date.now() + TRIAL_DIAS * 24 * 60 * 60 * 1000)
 
   const escritorio = await prisma.escritorio.create({
     data: {
@@ -86,7 +83,6 @@ authRouter.post('/register', async (req, res) => {
       oabUf: oabUf || 'SP',
       cpfCnpj: cpfCnpj || '',
       endereco: endereco || '',
-      trialAte,
       users: {
         create: {
           nome: nomeUsuario,

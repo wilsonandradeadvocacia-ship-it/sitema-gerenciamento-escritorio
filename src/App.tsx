@@ -17,6 +17,7 @@ import Assinatura from './pages/Assinatura'
 import AdminEscritorios from './pages/AdminEscritorios'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { useStore } from './store/useStore'
+import { contaBloqueada } from './lib/plano'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { autenticado, carregando, usuario, escritorio } = useAuth()
@@ -24,17 +25,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const carregarTudo = useStore((s) => s.carregarTudo)
   const location = useLocation()
 
-  const bloqueado = (() => {
-    if (usuario?.superAdmin || !escritorio) return false
-    const trialExpirado =
-      escritorio.planoStatus === 'trial' && escritorio.trialAte ? new Date(escritorio.trialAte) < new Date() : false
-    return (
-      escritorio.ativo === false ||
-      trialExpirado ||
-      escritorio.planoStatus === 'inadimplente' ||
-      escritorio.planoStatus === 'cancelado'
-    )
-  })()
+  const bloqueado = !usuario?.superAdmin && !!escritorio && contaBloqueada(escritorio)
 
   useEffect(() => {
     if (autenticado && !carregado && !bloqueado) {
