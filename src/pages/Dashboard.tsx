@@ -40,7 +40,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Clientes" value={String(clientes.length)} to="/clientes" />
-        <StatCard label="Contratos assinados" value={String(contratosAssinados.length)} to="/calculadora" />
+        <StatCard label="Contratos assinados" value={String(contratosAssinados.length)} to="/contratos?status=assinado" />
         <StatCard label="A receber (previsto)" value={formatBRL(totalPrevisto)} to="/financeiro" tone="brand" />
         <StatCard label="Em atraso" value={formatBRL(totalAtrasado)} to="/financeiro" tone="red" />
       </div>
@@ -106,10 +106,10 @@ export default function Dashboard() {
           <h2 className="font-medium text-brand-800 mb-2">Recebido no total</h2>
           <div className="text-2xl font-serif font-semibold text-green-700">{formatBRL(totalRecebido)}</div>
         </div>
-        <div className="card p-5">
+        <Link to="/contratos?status=rascunho" className="card p-5 hover:shadow-md transition-shadow block">
           <h2 className="font-medium text-brand-800 mb-2">Contratos aguardando assinatura</h2>
           <div className="text-2xl font-serif font-semibold text-amber-600">{contratosRascunho.length}</div>
-        </div>
+        </Link>
       </div>
     </div>
   )

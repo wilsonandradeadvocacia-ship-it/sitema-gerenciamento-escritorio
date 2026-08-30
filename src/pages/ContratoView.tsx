@@ -1,17 +1,48 @@
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import { formatBRL, formatDate, todayISO } from '../lib/format'
+import type { FormaPagamento } from '../types'
 
 export default function ContratoView() {
   const { id } = useParams()
-  const { contratos, clientes, assinarContrato } = useStore()
+  const navigate = useNavigate()
+  const { contratos, clientes, assinarContrato, atualizarContrato, excluirContrato } = useStore()
   const { escritorio, atualizarEscritorio: updateEscritorio } = useAuth()
   const contrato = contratos.find((c) => c.id === id)
   const cliente = clientes.find((c) => c.id === contrato?.clienteId)
   const [confirmando, setConfirmando] = useState(false)
   const [editandoEscritorio, setEditandoEscritorio] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false)
+  const [erroEdicao, setErroEdicao] = useState('')
+
+  const [formServico, setFormServico] = useState('')
+  const [formDescricao, setFormDescricao] = useState('')
+  const [formValor, setFormValor] = useState(0)
+  const [formTemExito, setFormTemExito] = useState(false)
+  const [formPercentualExito, setFormPercentualExito] = useState(0)
+  const [formForma, setFormForma] = useState<FormaPagamento>('parcelado')
+  const [formNumeroParcelas, setFormNumeroParcelas] = useState(1)
+  const [formPrimeiraData, setFormPrimeiraData] = useState(todayISO())
+  const [formPoderes, setFormPoderes] = useState('')
+  const [formClausulas, setFormClausulas] = useState('')
+
+  useEffect(() => {
+    if (!contrato) return
+    setFormServico(contrato.servico)
+    setFormDescricao(contrato.descricaoServico)
+    setFormValor(contrato.valorHonorarios)
+    setFormTemExito(contrato.percentualExito != null)
+    setFormPercentualExito(contrato.percentualExito ?? 20)
+    setFormForma(contrato.formaPagamento)
+    setFormNumeroParcelas(contrato.numeroParcelas)
+    setFormPrimeiraData(contrato.primeiraParcelaData)
+    setFormPoderes(contrato.procuracaoPoderes ?? '')
+    setFormClausulas(contrato.clausulasAdicionais ?? '')
+  }, [contrato?.id])
 
   if (!contrato || !cliente || !escritorio) {
     return (
@@ -37,13 +68,48 @@ export default function ContratoView() {
 
   const temDadosBancarios = Boolean(escritorio.banco || escritorio.agencia || escritorio.conta || escritorio.pix)
 
+  async function salvarEdicao() {
+    setErroEdicao('')
+    setSalvandoEdicao(true)
+    try {
+      await atualizarContrato(contrato!.id, {
+        servico: formServico,
+        descricaoServico: formDescricao,
+        valorHonorarios: formValor,
+        percentualExito: formTemExito ? formPercentualExito : undefined,
+        formaPagamento: formForma,
+        numeroParcelas: formForma === 'avista' ? 1 : formNumeroParcelas,
+        primeiraParcelaData: formPrimeiraData,
+        procuracaoPoderes: formPoderes,
+        clausulasAdicionais: formClausulas || undefined,
+      })
+      setEditando(false)
+    } catch (err) {
+      setErroEdicao(err instanceof Error ? err.message : 'Erro ao salvar alterações.')
+    } finally {
+      setSalvandoEdicao(false)
+    }
+  }
+
+  async function confirmarExclusao() {
+    try {
+      await excluirContrato(contrato!.id)
+      navigate('/contratos')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao excluir contrato.')
+    }
+  }
+
   let numeroClausula = 0
   const proximaClausula = () => `${++numeroClausula}ª`
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
-      <div className="no-print flex items-center justify-between">
+      <div className="no-print flex items-center justify-between flex-wrap gap-3">
         <div>
+          <Link to="/contratos" className="text-xs text-brand-600 hover:underline">
+            ← Voltar para Contratos
+          </Link>
           <h1 className="text-2xl font-serif font-semibold text-brand-900">Contrato de honorários</h1>
           <p className="text-sm text-slate-500">
             Cliente: {cliente.nome} · Status:{' '}
@@ -52,13 +118,39 @@ export default function ContratoView() {
             </span>
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap items-center">
           <button className="btn-secondary" onClick={() => setEditandoEscritorio((v) => !v)}>
             Dados do escritório
           </button>
+          {!contrato.assinado && (
+            <button
+              className="btn-secondary"
+              onClick={() => {
+                setEditando((v) => !v)
+                setErroEdicao('')
+              }}
+            >
+              {editando ? 'Fechar edição' : 'Editar contrato'}
+            </button>
+          )}
           <button className="btn-secondary" onClick={() => window.print()}>
             Imprimir / salvar PDF
           </button>
+          {excluindo ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-red-700">Excluir este contrato definitivamente?</span>
+              <button className="btn-secondary bg-red-600 text-white border-red-600 hover:bg-red-700" onClick={confirmarExclusao}>
+                Sim, excluir
+              </button>
+              <button className="btn-secondary" onClick={() => setExcluindo(false)}>
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button className="text-xs text-red-600 hover:underline" onClick={() => setExcluindo(true)}>
+              Excluir contrato
+            </button>
+          )}
           {!contrato.assinado &&
             (confirmando ? (
               <div className="flex items-center gap-2">
@@ -83,6 +175,123 @@ export default function ContratoView() {
             ))}
         </div>
       </div>
+
+      {contrato.assinado && (
+        <div className="no-print text-xs bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-3 py-2">
+          Este contrato já está assinado. Os dados do serviço, valor e parcelas não podem mais ser editados —
+          isso preserva a consistência do financeiro e da agenda já gerados. Você ainda pode excluí-lo, se
+          necessário (isso também remove os lançamentos e eventos vinculados a ele).
+        </div>
+      )}
+
+      {editando && !contrato.assinado && (
+        <div className="no-print card p-5 space-y-4">
+          <h2 className="font-medium text-brand-800">Editar dados do contrato</h2>
+          <div>
+            <label className="label">Serviço</label>
+            <input className="input" value={formServico} onChange={(e) => setFormServico(e.target.value)} />
+          </div>
+          <div>
+            <label className="label">Descrição do serviço</label>
+            <textarea
+              className="input"
+              rows={3}
+              value={formDescricao}
+              onChange={(e) => setFormDescricao(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="label">Valor dos honorários (R$)</label>
+              <input
+                type="number"
+                className="input"
+                value={formValor}
+                onChange={(e) => setFormValor(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <label className="label">Forma de pagamento</label>
+              <select
+                className="input"
+                value={formForma}
+                onChange={(e) => setFormForma(e.target.value as FormaPagamento)}
+              >
+                <option value="avista">À vista</option>
+                <option value="parcelado">Parcelado</option>
+                <option value="mensal_continuado">Mensalidade (assessoria continuada)</option>
+              </select>
+            </div>
+            {formForma !== 'avista' && (
+              <div>
+                <label className="label">Número de parcelas</label>
+                <input
+                  type="number"
+                  min={1}
+                  className="input"
+                  value={formNumeroParcelas}
+                  onChange={(e) => setFormNumeroParcelas(Number(e.target.value))}
+                />
+              </div>
+            )}
+          </div>
+          <div className="max-w-xs">
+            <label className="label">Data da 1ª parcela</label>
+            <input
+              type="date"
+              className="input"
+              value={formPrimeiraData}
+              onChange={(e) => setFormPrimeiraData(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={formTemExito}
+                onChange={(e) => setFormTemExito(e.target.checked)}
+              />
+              Haverá honorários contratuais de êxito ao final da demanda
+            </label>
+            {formTemExito && (
+              <div className="max-w-xs mt-2">
+                <label className="label">Percentual sobre o proveito econômico obtido (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  className="input"
+                  value={formPercentualExito}
+                  onChange={(e) => setFormPercentualExito(Number(e.target.value))}
+                />
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="label">Disposições adicionais (opcional)</label>
+            <textarea
+              className="input"
+              rows={2}
+              value={formClausulas}
+              onChange={(e) => setFormClausulas(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">Poderes da procuração</label>
+            <textarea className="input" rows={4} value={formPoderes} onChange={(e) => setFormPoderes(e.target.value)} />
+          </div>
+          {erroEdicao && <p className="text-sm text-red-600">{erroEdicao}</p>}
+          <div className="flex gap-3">
+            <button className="btn-primary" disabled={salvandoEdicao} onClick={salvarEdicao}>
+              {salvandoEdicao ? 'Salvando...' : 'Salvar alterações'}
+            </button>
+            <button className="btn-secondary" onClick={() => setEditando(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {editandoEscritorio && (
         <div className="no-print card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">

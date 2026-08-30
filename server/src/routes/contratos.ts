@@ -127,3 +127,55 @@ contratosRouter.post('/:id/cancelar', async (req: AuthedRequest, res) => {
   const atualizado = await prisma.contrato.update({ where: { id: contrato.id }, data: { status: 'cancelado' } })
   res.json(serializar(atualizado))
 })
+
+contratosRouter.patch('/:id', async (req: AuthedRequest, res) => {
+  const contrato = await prisma.contrato.findFirst({
+    where: { id: req.params.id, escritorioId: req.auth!.escritorioId },
+  })
+  if (!contrato) return res.status(404).json({ error: 'Contrato não encontrado.' })
+  if (contrato.assinado) {
+    return res.status(409).json({ error: 'Contratos já assinados não podem ser editados.' })
+  }
+
+  const b = req.body ?? {}
+  const valorHonorarios = b.valorHonorarios !== undefined ? Number(b.valorHonorarios) : contrato.valorHonorarios
+  const formaPagamento = b.formaPagamento ?? contrato.formaPagamento
+  const numeroParcelas =
+    formaPagamento === 'avista' ? 1 : Number(b.numeroParcelas ?? contrato.numeroParcelas) || 1
+  const primeiraParcelaData = b.primeiraParcelaData ?? contrato.primeiraParcelaData
+  const parcelas = gerarParcelas(valorHonorarios, numeroParcelas, primeiraParcelaData, formaPagamento)
+
+  const atualizado = await prisma.contrato.update({
+    where: { id: contrato.id },
+    data: {
+      uf: b.uf ?? contrato.uf,
+      servico: b.servico ?? contrato.servico,
+      descricaoServico: b.descricaoServico ?? contrato.descricaoServico,
+      valorHonorarios,
+      percentualExito:
+        b.percentualExito !== undefined ? (b.percentualExito === null ? null : Number(b.percentualExito)) : contrato.percentualExito,
+      formaPagamento,
+      numeroParcelas,
+      primeiraParcelaData,
+      parcelasJson: JSON.stringify(parcelas),
+      clausulasAdicionais: b.clausulasAdicionais ?? contrato.clausulasAdicionais,
+      procuracaoPoderes: b.procuracaoPoderes ?? contrato.procuracaoPoderes,
+    },
+  })
+  res.json(serializar(atualizado))
+})
+
+contratosRouter.delete('/:id', async (req: AuthedRequest, res) => {
+  const contrato = await prisma.contrato.findFirst({
+    where: { id: req.params.id, escritorioId: req.auth!.escritorioId },
+  })
+  if (!contrato) return res.status(404).json({ error: 'Contrato não encontrado.' })
+
+  await prisma.$transaction([
+    prisma.lancamentoFinanceiro.deleteMany({ where: { contratoId: contrato.id } }),
+    prisma.eventoAgenda.deleteMany({ where: { contratoId: contrato.id } }),
+    prisma.contrato.delete({ where: { id: contrato.id } }),
+  ])
+
+  res.status(204).end()
+})

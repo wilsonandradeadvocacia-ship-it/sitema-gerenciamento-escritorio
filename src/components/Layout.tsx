@@ -5,6 +5,7 @@ const links = [
   { to: '/', label: 'Visão geral', end: true },
   { to: '/clientes', label: 'Clientes' },
   { to: '/calculadora', label: 'Calculadora de honorários' },
+  { to: '/contratos', label: 'Contratos' },
   { to: '/financeiro', label: 'Financeiro' },
   { to: '/agenda', label: 'Agenda' },
   { to: '/tabelas-oab', label: 'Tabelas OAB' },

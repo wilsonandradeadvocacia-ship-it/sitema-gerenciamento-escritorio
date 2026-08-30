@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Clientes from './pages/Clientes'
 import Calculadora from './pages/Calculadora'
+import Contratos from './pages/Contratos'
 import ContratoView from './pages/ContratoView'
 import Financeiro from './pages/Financeiro'
 import Agenda from './pages/Agenda'
@@ -51,6 +52,7 @@ function AppRoutes() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/calculadora" element={<Calculadora />} />
+        <Route path="/contratos" element={<Contratos />} />
         <Route path="/contratos/:id" element={<ContratoView />} />
         <Route path="/financeiro" element={<Financeiro />} />
         <Route path="/agenda" element={<Agenda />} />

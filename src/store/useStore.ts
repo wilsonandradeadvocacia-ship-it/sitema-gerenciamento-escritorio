@@ -37,6 +37,24 @@ interface Store {
 
   assinarContrato: (contratoId: string) => Promise<void>
   cancelarContrato: (contratoId: string) => Promise<void>
+  atualizarContrato: (
+    contratoId: string,
+    patch: Partial<
+      Pick<
+        ContratoHonorarios,
+        | 'servico'
+        | 'descricaoServico'
+        | 'valorHonorarios'
+        | 'percentualExito'
+        | 'formaPagamento'
+        | 'numeroParcelas'
+        | 'primeiraParcelaData'
+        | 'clausulasAdicionais'
+        | 'procuracaoPoderes'
+      >
+    >,
+  ) => Promise<void>
+  excluirContrato: (contratoId: string) => Promise<void>
 
   marcarParcelaRecebida: (lancamentoId: string, dataRecebimento: string) => Promise<void>
 
@@ -119,6 +137,23 @@ export const useStore = create<Store>()((set, get) => ({
   cancelarContrato: async (contratoId) => {
     const contrato = await apiFetch<ContratoHonorarios>(`/api/contratos/${contratoId}/cancelar`, { method: 'POST' })
     set((s) => ({ contratos: s.contratos.map((c) => (c.id === contratoId ? contrato : c)) }))
+  },
+
+  atualizarContrato: async (contratoId, patch) => {
+    const contrato = await apiFetch<ContratoHonorarios>(`/api/contratos/${contratoId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    })
+    set((s) => ({ contratos: s.contratos.map((c) => (c.id === contratoId ? contrato : c)) }))
+  },
+
+  excluirContrato: async (contratoId) => {
+    await apiFetch(`/api/contratos/${contratoId}`, { method: 'DELETE' })
+    set((s) => ({
+      contratos: s.contratos.filter((c) => c.id !== contratoId),
+      lancamentos: s.lancamentos.filter((l) => l.contratoId !== contratoId),
+      eventos: s.eventos.filter((e) => e.contratoId !== contratoId),
+    }))
   },
 
   marcarParcelaRecebida: async (lancamentoId, dataRecebimento) => {
