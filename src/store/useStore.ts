@@ -27,6 +27,7 @@ interface Store {
     origemValor: 'tabela_oab' | 'manual'
     itemTabelaId?: string
     valorHonorarios: number
+    percentualExito?: number
     formaPagamento: ContratoHonorarios['formaPagamento']
     numeroParcelas: number
     primeiraParcelaData: string

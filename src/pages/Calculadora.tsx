@@ -29,6 +29,8 @@ export default function Calculadora() {
   const [primeiraParcelaData, setPrimeiraParcelaData] = useState(todayISO())
   const [poderes, setPoderes] = useState(PODERES_PADRAO)
   const [valorEscolhido, setValorEscolhido] = useState<number | null>(null)
+  const [temExito, setTemExito] = useState(false)
+  const [percentualExito, setPercentualExito] = useState<number>(20)
 
   const tabela = tabelasOAB[uf]
   const item: ItemTabelaHonorarios | undefined = tabela?.itens.find((i) => i.id === itemId)
@@ -65,6 +67,7 @@ export default function Calculadora() {
         numeroParcelas: formaPagamento === 'avista' ? 1 : numeroParcelas,
         primeiraParcelaData,
         procuracaoPoderes: poderes,
+        percentualExito: temExito ? percentualExito : undefined,
       })
       navigate(`/contratos/${contrato.id}`)
     } catch (err) {
@@ -293,7 +296,29 @@ export default function Calculadora() {
       </div>
 
       <div className="card p-6 space-y-4">
-        <h2 className="font-medium text-brand-800">4. Poderes da procuração</h2>
+        <h2 className="font-medium text-brand-800">4. Honorários de êxito (opcional)</h2>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={temExito} onChange={(e) => setTemExito(e.target.checked)} />
+          Haverá honorários contratuais de êxito ao final da demanda
+        </label>
+        {temExito && (
+          <div className="max-w-xs">
+            <label className="label">Percentual sobre o proveito econômico obtido (%)</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              className="input"
+              value={percentualExito}
+              onChange={(e) => setPercentualExito(Number(e.target.value))}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="card p-6 space-y-4">
+        <h2 className="font-medium text-brand-800">5. Poderes da procuração</h2>
         <textarea className="input" rows={4} value={poderes} onChange={(e) => setPoderes(e.target.value)} />
       </div>
 

@@ -6,7 +6,8 @@ export const escritorioRouter = Router()
 escritorioRouter.use(requireAuth)
 
 escritorioRouter.patch('/', async (req: AuthedRequest, res) => {
-  const { nomeEscritorio, nomeAdvogadoResponsavel, oabNumero, oabUf, cpfCnpj, endereco } = req.body ?? {}
+  const { nomeEscritorio, nomeAdvogadoResponsavel, oabNumero, oabUf, cpfCnpj, endereco, banco, agencia, conta, pix } =
+    req.body ?? {}
   const escritorio = await prisma.escritorio.update({
     where: { id: req.auth!.escritorioId },
     data: {
@@ -16,6 +17,10 @@ escritorioRouter.patch('/', async (req: AuthedRequest, res) => {
       ...(oabUf !== undefined && { oabUf }),
       ...(cpfCnpj !== undefined && { cpfCnpj }),
       ...(endereco !== undefined && { endereco }),
+      ...(banco !== undefined && { banco }),
+      ...(agencia !== undefined && { agencia }),
+      ...(conta !== undefined && { conta }),
+      ...(pix !== undefined && { pix }),
     },
   })
   return res.json({
@@ -26,5 +31,9 @@ escritorioRouter.patch('/', async (req: AuthedRequest, res) => {
     oabUf: escritorio.oabUf,
     cpfCnpj: escritorio.cpfCnpj,
     endereco: escritorio.endereco,
+    banco: escritorio.banco ?? undefined,
+    agencia: escritorio.agencia ?? undefined,
+    conta: escritorio.conta ?? undefined,
+    pix: escritorio.pix ?? undefined,
   })
 })

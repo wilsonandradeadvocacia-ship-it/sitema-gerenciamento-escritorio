@@ -15,6 +15,10 @@ function escritorioPublico(e: {
   oabUf: string
   cpfCnpj: string
   endereco: string
+  banco?: string | null
+  agencia?: string | null
+  conta?: string | null
+  pix?: string | null
 }) {
   return {
     id: e.id,
@@ -24,6 +28,10 @@ function escritorioPublico(e: {
     oabUf: e.oabUf,
     cpfCnpj: e.cpfCnpj,
     endereco: e.endereco,
+    banco: e.banco ?? undefined,
+    agencia: e.agencia ?? undefined,
+    conta: e.conta ?? undefined,
+    pix: e.pix ?? undefined,
   }
 }
 

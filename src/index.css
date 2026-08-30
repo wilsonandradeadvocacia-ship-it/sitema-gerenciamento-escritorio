@@ -4,6 +4,7 @@
 
 html {
   -webkit-font-smoothing: antialiased;
+  @apply font-sans;
 }
 
 body {
@@ -32,6 +33,12 @@ body {
 }
 
 @media print {
+  /* Margem zero faz o Chrome deixar de imprimir o cabeçalho/rodapé
+     automático (data, título da página, URL, "1/3" etc.) — o respiro
+     visual da página passa a vir do padding do próprio #print-area. */
+  @page {
+    margin: 0;
+  }
   body * {
     visibility: hidden;
   }
@@ -43,6 +50,17 @@ body {
     left: 0;
     top: 0;
     width: 100%;
+    padding: 18mm 16mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  #print-area table,
+  #print-area tr {
+    break-inside: avoid;
+  }
+  #print-area .quebra-pagina {
+    break-before: page;
   }
   .no-print {
     display: none !important;

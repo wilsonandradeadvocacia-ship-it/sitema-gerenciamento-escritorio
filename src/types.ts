@@ -61,6 +61,7 @@ export interface ContratoHonorarios {
   origemValor: 'tabela_oab' | 'manual'
   itemTabelaId?: string
   valorHonorarios: number
+  percentualExito?: number
   formaPagamento: FormaPagamento
   numeroParcelas: number
   primeiraParcelaData: string
@@ -96,6 +97,10 @@ export interface EscritorioConfig {
   oabUf: string
   cpfCnpj: string
   endereco: string
+  banco?: string
+  agencia?: string
+  conta?: string
+  pix?: string
 }
 
 export interface LancamentoFinanceiro {

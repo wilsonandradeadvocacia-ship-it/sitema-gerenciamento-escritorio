@@ -54,6 +54,7 @@ contratosRouter.post('/', async (req: AuthedRequest, res) => {
       origemValor: b.origemValor || 'manual',
       itemTabelaId: b.itemTabelaId,
       valorHonorarios: Number(b.valorHonorarios),
+      percentualExito: b.percentualExito !== undefined && b.percentualExito !== null ? Number(b.percentualExito) : null,
       formaPagamento: b.formaPagamento,
       numeroParcelas,
       primeiraParcelaData: b.primeiraParcelaData,

@@ -15,6 +15,10 @@ model Escritorio {
   oabUf                   String
   cpfCnpj                 String
   endereco                String
+  banco                   String?
+  agencia                 String?
+  conta                   String?
+  pix                     String?
   createdAt               DateTime @default(now())
 
   users       User[]
@@ -72,6 +76,7 @@ model Contrato {
   origemValor         String
   itemTabelaId        String?
   valorHonorarios     Float
+  percentualExito     Float?
   formaPagamento      String
   numeroParcelas      Int
   primeiraParcelaData String

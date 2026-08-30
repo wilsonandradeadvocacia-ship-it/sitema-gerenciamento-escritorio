@@ -35,6 +35,8 @@ export default function ContratoView() {
 
   const qualificacaoEscritorio = `${escritorio.nomeEscritorio}, inscrito(a) no CNPJ/CPF sob o nº ${escritorio.cpfCnpj}, com escritório profissional em ${escritorio.endereco}, neste ato representado(a) por ${escritorio.nomeAdvogadoResponsavel}, advogado(a) inscrito(a) na OAB/${escritorio.oabUf} sob o nº ${escritorio.oabNumero}`
 
+  const temDadosBancarios = Boolean(escritorio.banco || escritorio.agencia || escritorio.conta || escritorio.pix)
+
   let numeroClausula = 0
   const proximaClausula = () => `${++numeroClausula}ª`
 
@@ -132,12 +134,51 @@ export default function ContratoView() {
               onChange={(e) => updateEscritorio({ endereco: e.target.value })}
             />
           </div>
+          <div className="md:col-span-2 border-t border-slate-200 pt-4 mt-1">
+            <p className="text-xs font-medium text-slate-500 mb-3">
+              Dados bancários (exibidos no contrato de honorários, quando preenchidos)
+            </p>
+          </div>
+          <div>
+            <label className="label">Banco</label>
+            <input
+              className="input"
+              value={escritorio.banco ?? ''}
+              onChange={(e) => updateEscritorio({ banco: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Agência</label>
+            <input
+              className="input"
+              value={escritorio.agencia ?? ''}
+              onChange={(e) => updateEscritorio({ agencia: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Conta corrente</label>
+            <input
+              className="input"
+              value={escritorio.conta ?? ''}
+              onChange={(e) => updateEscritorio({ conta: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Chave PIX</label>
+            <input
+              className="input"
+              value={escritorio.pix ?? ''}
+              onChange={(e) => updateEscritorio({ pix: e.target.value })}
+            />
+          </div>
         </div>
       )}
 
-      <div id="print-area" className="card p-10 font-serif text-[13px] leading-relaxed text-slate-800 space-y-6">
+      <div id="print-area" className="card p-10 font-doc text-[13px] leading-relaxed text-slate-800 space-y-6">
         <section>
-          <h2 className="text-center font-semibold text-base uppercase mb-4">Contrato de Honorários Advocatícios</h2>
+          <h2 className="text-center font-serif font-semibold text-base uppercase mb-4">
+            Contrato de Honorários Advocatícios
+          </h2>
           <p>
             <strong>CONTRATANTE:</strong> {qualificacaoCliente}.
           </p>
@@ -158,10 +199,6 @@ export default function ContratoView() {
             <strong>{contrato.servico}</strong>.
           </p>
           <p className="mt-1">{contrato.descricaoServico}</p>
-          <p className="mt-1 text-slate-500 text-xs">
-            Referência de mercado consultada: tabela de honorários {contrato.uf ? `da ${contrato.uf}` : ''}
-            {contrato.origemValor === 'tabela_oab' ? ' (parâmetro adotado como base de cálculo).' : ' (valor definido manualmente entre as partes).'}
-          </p>
         </section>
 
         <section>
@@ -218,10 +255,28 @@ export default function ContratoView() {
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-xs text-slate-500">
-            Não estão aqui incluídos eventuais honorários de sucumbência, que pertencerão ao(à) CONTRATADO(A)
-            nos termos do art. 23 da Lei nº 8.906/94.
-          </p>
+          {temDadosBancarios && (
+            <p className="mt-2">
+              Parágrafo único. Os valores deverão ser pagos mediante crédito bancário na seguinte conta:{' '}
+              {[
+                escritorio.banco,
+                escritorio.conta && `Conta Corrente ${escritorio.conta}`,
+                escritorio.agencia && `Agência ${escritorio.agencia}`,
+                escritorio.pix && `PIX chave ${escritorio.pix}`,
+              ]
+                .filter(Boolean)
+                .join(', ')}
+              , de titularidade do(a) CONTRATADO(A).
+            </p>
+          )}
+          {contrato.percentualExito != null && (
+            <p className="mt-2">
+              Cláusula {proximaClausula()}. Além dos honorários fixados na cláusula anterior, o(a)
+              CONTRATADO(A) fará jus a honorários contratuais de êxito no percentual de{' '}
+              <strong>{contrato.percentualExito}%</strong> sobre o proveito econômico obtido ao final da
+              demanda, a serem pagos quando do recebimento dos respectivos valores pelo(a) CONTRATANTE.
+            </p>
+          )}
         </section>
 
         <section>
@@ -297,8 +352,8 @@ export default function ContratoView() {
           )}
         </section>
 
-        <section className="pt-10 border-t border-dashed border-slate-300 mt-10">
-          <h2 className="text-center font-semibold text-base uppercase mb-4">
+        <section className="quebra-pagina pt-10 border-t border-dashed border-slate-300 mt-10">
+          <h2 className="text-center font-serif font-semibold text-base uppercase mb-4">
             Instrumento de Procuração Particular
           </h2>
           <p>
