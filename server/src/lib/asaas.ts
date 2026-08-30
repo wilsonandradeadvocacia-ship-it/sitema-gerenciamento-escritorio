@@ -55,34 +55,26 @@ export async function criarOuObterCliente(input: {
   })
 }
 
-export interface AsaasSubscription {
+export interface AsaasPayment {
   id: string
   status: string
-  nextDueDate: string
+  invoiceUrl: string
 }
 
-export async function criarAssinatura(input: {
+export async function criarCobrancaUnica(input: {
   customerId: string
   valor: number
   descricao: string
-  diaVencimento: string
-}): Promise<AsaasSubscription> {
-  return asaasFetch<AsaasSubscription>('/subscriptions', {
+}): Promise<AsaasPayment> {
+  const hoje = new Date().toISOString().slice(0, 10)
+  return asaasFetch<AsaasPayment>('/payments', {
     method: 'POST',
     body: JSON.stringify({
       customer: input.customerId,
       billingType: 'PIX',
       value: input.valor,
-      nextDueDate: input.diaVencimento,
-      cycle: 'MONTHLY',
+      dueDate: hoje,
       description: input.descricao,
     }),
   })
-}
-
-export async function obterPrimeiraCobranca(subscriptionId: string): Promise<{ invoiceUrl: string } | null> {
-  const res = await asaasFetch<{ data: { invoiceUrl: string }[] }>(
-    `/subscriptions/${subscriptionId}/payments`,
-  )
-  return res.data?.[0] ?? null
 }

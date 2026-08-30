@@ -19,7 +19,7 @@ interface EscritorioAdmin {
 
 const planoLabel: Record<string, string> = {
   trial: 'Período de teste',
-  ativo: 'Assinatura ativa',
+  ativo: 'Acesso liberado',
   inadimplente: 'Inadimplente',
   cancelado: 'Cancelado',
 }

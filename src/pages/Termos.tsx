@@ -45,13 +45,14 @@ export default function Termos() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-brand-800 mb-1">4. Assinatura, período de teste e cobrança</h2>
+            <h2 className="font-semibold text-brand-800 mb-1">4. Período de teste e acesso</h2>
             <p>
               O acesso ao Serviço pode incluir um período de teste gratuito, informado no momento do
-              cadastro. Encerrado esse período, a continuidade do uso depende da contratação de um plano
-              pago, cobrado de forma recorrente. O não pagamento pode resultar na suspensão temporária do
-              acesso às funcionalidades, sem exclusão imediata dos dados armazenados, ressalvado o disposto
-              na cláusula de retenção de dados abaixo.
+              cadastro. Encerrado esse período, a continuidade do uso depende da aquisição do acesso ao
+              sistema mediante pagamento único, sem cobrança recorrente ou mensalidade. Enquanto o
+              pagamento não for confirmado, o acesso às funcionalidades permanece suspenso, sem exclusão
+              imediata dos dados armazenados, ressalvado o disposto na cláusula de retenção de dados
+              abaixo.
             </p>
           </section>
 

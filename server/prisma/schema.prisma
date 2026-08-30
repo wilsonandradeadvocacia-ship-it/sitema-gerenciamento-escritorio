@@ -25,6 +25,7 @@ model Escritorio {
   dataProximoVencimento   DateTime?
   asaasCustomerId         String?
   asaasSubscriptionId     String?
+  asaasPaymentId          String?
   createdAt               DateTime @default(now())
 
   users       User[]

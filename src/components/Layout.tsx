@@ -9,7 +9,7 @@ const links = [
   { to: '/financeiro', label: 'Financeiro' },
   { to: '/agenda', label: 'Agenda' },
   { to: '/tabelas-oab', label: 'Tabelas OAB' },
-  { to: '/assinatura', label: 'Assinatura' },
+  { to: '/assinatura', label: 'Acesso ao sistema' },
 ]
 
 export default function Layout() {
