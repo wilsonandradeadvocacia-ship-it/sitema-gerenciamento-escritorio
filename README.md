@@ -71,6 +71,31 @@ ninguém deve precisar rodar comandos no terminal. A combinação recomendada
   5. Volte no Railway e atualize a variável `CORS_ORIGIN` com essa URL da
      Vercel, depois faça um redeploy do serviço do backend.
 
+### Assinatura, trial e administração da plataforma
+
+Além das variáveis acima, o backend (Railway) aceita:
+
+- `SUPERADMIN_EMAILS` = lista de e-mails separados por vírgula (ex.:
+  `voce@escritorio.com,socio@escritorio.com`) que têm acesso ao painel
+  "Administração" (`/admin/escritorios`), enxergam todos os escritórios
+  cadastrados e não são bloqueados por trial/assinatura vencida. Coloque
+  aqui o seu próprio e-mail de login para acessar o painel em produção.
+- `ASAAS_API_KEY` = chave de API da conta Asaas (sandbox para testes,
+  produção para cobrança real). Sem essa variável, o botão "Assinar agora"
+  falha com uma mensagem clara, mas o resto do sistema continua funcionando
+  normalmente (o bloqueio por trial ainda funciona).
+- `ASAAS_ENV` = `sandbox` ou `production` (padrão: `sandbox`).
+- `ASAAS_WEBHOOK_TOKEN` = token que você escolhe e cadastra também no painel
+  do Asaas (Configurações → Webhooks), na URL
+  `https://<seu-dominio-railway>/api/assinatura/webhook`, para validar que
+  as notificações de pagamento realmente vêm do Asaas.
+- `VALOR_PLANO_MENSAL` = valor mensal cobrado, em reais (padrão: `97`).
+
+Todo novo escritório cadastrado ganha automaticamente 14 dias de teste
+gratuito. Escritórios já existentes antes deste recurso recebem
+automaticamente um período de teste de 30 dias a partir do deploy dessa
+atualização, para não serem bloqueados sem aviso.
+
 Para plataformas totalmente serverless no lugar do Railway (a própria Vercel
 para o backend, por exemplo), SQLite **não funciona** porque o sistema de
 arquivos é temporário — nesse caso é necessário trocar para Postgres (ex.:
