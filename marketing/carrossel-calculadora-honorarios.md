@@ -119,3 +119,25 @@ da versão vigente junto à seccional continua sendo responsabilidade do escrit�
      antes de inserir número de artigo do Código de Ética na arte.
 - **Identificação:** incluir nome do escritório/sociedade e inscrição na OAB na
   última tela e na bio.
+
+---
+
+## Artes
+
+PNGs prontos para postagem em `marketing/artes/` (1080x1350 @2x = 2160x2700, 4:5):
+
+| Arquivo | Tela |
+|---|---|
+| `artes/01-capa.png` | Capa — três advogados, três valores |
+| `artes/02-problema.png` | O custo do honorário arbitrado "de cabeça" |
+| `artes/03-virada.png` | As 27 tabelas seccionais e o atrito de acesso |
+| `artes/04-rotina.png` | Os 4 passos e o fechamento com identificação |
+
+Fonte das artes: `artes/*.html` + `artes/_base.css` (paleta `brand`/`gold` do
+`tailwind.config.js`). Para regerar após editar o texto ou preencher o nome do
+escritório e a inscrição na OAB na tela 4:
+
+```bash
+npm i --no-save playwright-core
+cd marketing/artes && node render.mjs
+```
