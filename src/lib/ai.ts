@@ -124,8 +124,14 @@ function complianceNoteFallback(): string {
   return "Conformidade OAB: informação/marketing de conteúdo (permitido). Verificado sem honorários, oferta, promessa de resultado, caso identificável, autoengrandecimento ou ostentação. Revise a base normativa citada antes de publicar e inclua a identificação do escritório (nome + OAB).";
 }
 
-function buildMarketingPrompt(type: MarketingContentType, area: string, brief: string): { prompt: string; maxTokens: number } {
+interface MarketingFirm {
+  name: string;
+  oab?: string;
+}
+
+function buildMarketingPrompt(type: MarketingContentType, area: string, brief: string, firm: MarketingFirm): { prompt: string; maxTokens: number } {
   const header = `Área do direito: ${area}\nTema/objetivo do conteúdo: ${brief}\n\n`;
+  const firmLine = firm.oab ? `"${firm.name}" + "${firm.oab}"` : `"${firm.name}"`;
 
   switch (type) {
     case "instagram_carousel":
@@ -138,7 +144,7 @@ function buildMarketingPrompt(type: MarketingContentType, area: string, brief: s
 - Telas 2-3: desenvolva a cena/tensão (o problema, impessoal, sem caso real).
 - Telas 4-6: a virada — explicação técnica, uma ideia por tela, com base legal.
 - Penúltima tela: a nuance, exceção ou erro comum.
-- Última tela: fechamento informativo que retoma a narrativa + nome do escritório "Wilson Andrade Advocacia e Consultoria Jurídica" + "OAB/AL 14.662". Sem CTA de venda.
+- Última tela: fechamento informativo que retoma a narrativa + nome do escritório ${firmLine}. Sem CTA de venda.
 
 Depois, escreva a LEGENDA do post (desenvolva a narrativa completa em prosa, não repita a arte, 150-300 palavras) e 5 a 8 hashtags de TEMA (ex. #direitotributario), nunca de captação (nunca #advogadobarato ou similar).
 
@@ -189,10 +195,11 @@ Responda SOMENTE em JSON válido: {"headline": "<linha de abertura/gancho>", "bo
   }
 }
 
-function heuristicMarketingContent(type: MarketingContentType, area: string, brief: string): GeneratedMarketingContent {
-  const firmLine = "Wilson Andrade Advocacia e Consultoria Jurídica — OAB/AL 14.662";
+function heuristicMarketingContent(type: MarketingContentType, area: string, brief: string, firm: MarketingFirm): GeneratedMarketingContent {
+  const firmLine = firm.oab ? `${firm.name} — ${firm.oab}` : firm.name;
+  const firmHashtag = `#${firm.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase()}`;
   const explicacao = `[Situação-problema] Casos envolvendo "${brief}" na área de Direito ${area} costumam gerar dúvidas recorrentes sobre como a legislação se aplica ao caso concreto.\n\n[Explicação técnica] A análise depende da norma aplicável — [confirmar dispositivo exato: lei, artigo ou súmula pertinente a "${brief}"] — e dos fatos específicos de cada situação.\n\n[Nuance] Um erro comum é tratar esse tema de forma genérica; exceções e prazos específicos costumam mudar o resultado da análise.\n\n[Fechamento] Cada caso depende da análise dos documentos e do contexto específico.`;
-  const hashtags = [`#direito${area.replace(/\s+/g, "").toLowerCase()}`, "#wilsonandradeadvocacia", "#direitosdocidadao", "#consultoriajuridica", "#maceio"];
+  const hashtags = [`#direito${area.replace(/\s+/g, "").toLowerCase()}`, firmHashtag, "#direitosdocidadao", "#consultoriajuridica"];
 
   if (type === "instagram_carousel") {
     return {
@@ -220,10 +227,11 @@ function heuristicMarketingContent(type: MarketingContentType, area: string, bri
 export async function generateMarketingContent(
   type: MarketingContentType,
   area: string,
-  brief: string
+  brief: string,
+  firm: MarketingFirm
 ): Promise<GeneratedMarketingContent> {
-  const heuristic = heuristicMarketingContent(type, area, brief);
-  const { prompt, maxTokens } = buildMarketingPrompt(type, area, brief);
+  const heuristic = heuristicMarketingContent(type, area, brief, firm);
+  const { prompt, maxTokens } = buildMarketingPrompt(type, area, brief, firm);
 
   const text = await askClaude(OAB_SYSTEM_PROMPT, prompt, maxTokens);
   if (!text) return heuristic;

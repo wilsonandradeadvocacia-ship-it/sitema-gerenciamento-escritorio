@@ -15,9 +15,11 @@ function fmtBRL(v: number) {
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
+  const [firmName, setFirmName] = useState<string>("");
 
   useEffect(() => {
     fetch("/api/dashboard").then((r) => r.json()).then(setData);
+    fetch("/api/configuracoes").then((r) => r.json()).then((f) => setFirmName(f.name)).catch(() => {});
   }, []);
 
   if (!data) return <p className="text-navy-400 text-sm">Carregando painel...</p>;
@@ -26,7 +28,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Visão Geral" subtitle="Panorama do escritório Wilson Andrade Advocacia e Consultoria Jurídica" />
+      <PageHeader title="Visão Geral" subtitle={`Panorama do escritório ${firmName}`} />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Kpi label="Processos ativos" value={data.activeProcesses} />

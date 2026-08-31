@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mergeDocxPlaceholders } from "@/lib/docmerge";
 import { buildClientQualification } from "@/lib/docgen";
-import { FIRM } from "@/lib/constants";
+import { getFirmProfile } from "@/lib/firm";
 import { convertToPdf } from "@/lib/soffice";
 import path from "path";
 import { mkdir, writeFile } from "fs/promises";
@@ -19,6 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const client = body.clientId ? await prisma.client.findUnique({ where: { id: body.clientId } }) : null;
   const legalProcess = body.processId ? await prisma.process.findUnique({ where: { id: body.processId } }) : null;
+  const firm = await getFirmProfile();
 
   const today = new Date();
   const values: Record<string, string> = {
@@ -36,9 +37,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     processo_vara: legalProcess?.court ?? "",
     data: today.toLocaleDateString("pt-BR"),
     data_extenso: today.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }),
-    advogado_nome: FIRM.lawyer,
-    advogado_oab: FIRM.oab,
-    escritorio_endereco: FIRM.address,
+    advogado_nome: firm.lawyer,
+    advogado_oab: firm.oab,
+    escritorio_endereco: firm.address,
     ...(body.customValues || {}),
   };
 

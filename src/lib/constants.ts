@@ -72,18 +72,3 @@ export const TEMPLATE_PLACEHOLDERS = [
   { key: "advogado_oab", label: "OAB do advogado" },
   { key: "escritorio_endereco", label: "Endereço do escritório" },
 ] as const;
-
-export const FIRM = {
-  name: "Wilson Andrade Advocacia e Consultoria Jurídica",
-  lawyer: "WILSON VERAS DE ANDRADE",
-  oab: "OAB/AL 14.662",
-  cpf: "084.630.434-10",
-  cnpj: "64.540.896/0001-84",
-  companyName: "WILSON VERAS DE ANDRADE SOCIEDADE INDIVIDUAL DE ADVOCACIA",
-  address: "Av. Menino Marcelo, 9350, Empresarial Humberto Lôbo, sala 611, Serraria, Maceió/AL, CEP: 57046-000",
-  city: "Maceió",
-  state: "AL",
-  phone: "(82) 99614-3977",
-  email: "wilsonandradeadvocacia@gmail.com",
-  bank: "Banco C6 S.A., Conta Corrente 41056451-6, Agência 0001, PIX chave CNPJ: 64.540.896/0001-84",
-};

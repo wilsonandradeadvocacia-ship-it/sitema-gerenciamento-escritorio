@@ -49,9 +49,10 @@ function textBlock(lines: string[], x: number, startY: number, lineHeight: numbe
     .join("\n");
 }
 
-async function logoBase64(): Promise<string | null> {
+async function logoBase64(logoPath?: string | null): Promise<string | null> {
+  if (!logoPath) return null;
   try {
-    const buf = await readFile(path.join(process.cwd(), "public", "brand", "logo-icon.png"));
+    const buf = await readFile(path.join(process.cwd(), "public", logoPath.replace(/^\/+/, "")));
     return buf.toString("base64");
   } catch {
     return null;
@@ -64,6 +65,7 @@ interface CardOptions {
   body?: string;
   footer?: string; // e.g. firm name, shown small at bottom
   variant?: "dark" | "light";
+  logoPath?: string | null;
 }
 
 async function renderCard(opts: CardOptions): Promise<Buffer> {
@@ -76,7 +78,7 @@ async function renderCard(opts: CardOptions): Promise<Buffer> {
 
   const margin = 90;
   const contentWidth = SIZE - margin * 2;
-  const logo = await logoBase64();
+  const logo = await logoBase64(opts.logoPath);
 
   const eyebrowLines = opts.eyebrow ? wrapText(opts.eyebrow.toUpperCase(), 28, contentWidth) : [];
   const titleLines = wrapText(opts.title, 56, contentWidth, 0.52);
@@ -142,16 +144,23 @@ export interface CarouselSlideInput {
   body: string;
 }
 
+export interface CardFirm {
+  name: string;
+  oab?: string;
+  logoPath?: string | null;
+}
+
 /**
  * Renderiza um card único (imagem 1080x1080) a partir de um título/gancho —
  * usado para post único de Instagram, Facebook e LinkedIn.
  */
-export async function renderSocialPostImage(headline: string, area?: string): Promise<string> {
+export async function renderSocialPostImage(headline: string, area?: string, firm?: CardFirm): Promise<string> {
   const buffer = await renderCard({
     eyebrow: area,
     title: headline,
-    footer: "Wilson Andrade Advocacia",
+    footer: firm?.name,
     variant: "dark",
+    logoPath: firm?.logoPath,
   });
   return saveCard(buffer, "post");
 }
@@ -159,7 +168,7 @@ export async function renderSocialPostImage(headline: string, area?: string): Pr
 /**
  * Renderiza cada tela de um carrossel como uma imagem 1080x1080 separada.
  */
-export async function renderCarouselImages(slides: CarouselSlideInput[], area?: string): Promise<string[]> {
+export async function renderCarouselImages(slides: CarouselSlideInput[], area?: string, firm?: CardFirm): Promise<string[]> {
   const paths: string[] = [];
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i];
@@ -169,8 +178,9 @@ export async function renderCarouselImages(slides: CarouselSlideInput[], area?: 
       eyebrow: isCover ? area : `${i + 1}/${slides.length}`,
       title: slide.title,
       body: slide.body,
-      footer: isClosing ? "Wilson Andrade Advocacia · OAB/AL 14.662" : undefined,
+      footer: isClosing && firm?.name ? `${firm.name}${firm.oab ? ` · ${firm.oab}` : ""}` : undefined,
       variant: isCover || isClosing ? "dark" : i % 2 === 0 ? "light" : "dark",
+      logoPath: firm?.logoPath,
     });
     paths.push(await saveCard(buffer, `carrossel-${i + 1}`));
   }

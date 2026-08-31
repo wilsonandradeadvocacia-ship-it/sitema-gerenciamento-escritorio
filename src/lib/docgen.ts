@@ -12,7 +12,7 @@ import {
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { v4 as uuid } from "uuid";
-import { FIRM } from "./constants";
+import { getFirmProfile, FirmProfile } from "./firm";
 import { convertToPdf } from "./soffice";
 
 const GEN_ROOT = path.join(process.cwd(), "public", "uploads", "gerados");
@@ -48,13 +48,15 @@ function sectionTitle(text: string) {
   });
 }
 
-async function buildHeader() {
+async function buildHeader(firm: FirmProfile) {
   const fs = await import("fs/promises");
   let imageBuffer: Buffer | null = null;
-  try {
-    imageBuffer = await fs.readFile(path.join(process.cwd(), "public", "brand", "logo-full.jpg"));
-  } catch {
-    imageBuffer = null;
+  if (firm.logoFullPath) {
+    try {
+      imageBuffer = await fs.readFile(path.join(process.cwd(), "public", firm.logoFullPath.replace(/^\/+/, "")));
+    } catch {
+      imageBuffer = null;
+    }
   }
   const children = [];
   if (imageBuffer) {
@@ -74,7 +76,7 @@ async function buildHeader() {
   return new Header({ children });
 }
 
-function buildFooter() {
+function buildFooter(firm: FirmProfile) {
   return new Footer({
     children: [
       new Paragraph({
@@ -83,7 +85,7 @@ function buildFooter() {
         spacing: { before: 100 },
         children: [
           new TextRun({
-            text: `${FIRM.address}`,
+            text: `${firm.address}`,
             size: 15,
             color: "555555",
             font: "Georgia",
@@ -94,7 +96,7 @@ function buildFooter() {
         alignment: AlignmentType.CENTER,
         children: [
           new TextRun({
-            text: `${FIRM.email} | ${FIRM.phone}`,
+            text: `${firm.email} | ${firm.phone}`,
             size: 15,
             color: "555555",
             font: "Georgia",
@@ -105,7 +107,7 @@ function buildFooter() {
   });
 }
 
-export async function renderLetterheadDocx(title: string, bodyParagraphs: Paragraph[]): Promise<Buffer> {
+export async function renderLetterheadDocx(title: string, bodyParagraphs: Paragraph[], firm: FirmProfile): Promise<Buffer> {
   const doc = new Document({
     sections: [
       {
@@ -114,8 +116,8 @@ export async function renderLetterheadDocx(title: string, bodyParagraphs: Paragr
             margin: { top: 1600, bottom: 1200, left: 1300, right: 1300 },
           },
         },
-        headers: { default: await buildHeader() },
-        footers: { default: buildFooter() },
+        headers: { default: await buildHeader(firm) },
+        footers: { default: buildFooter(firm) },
         children: [heading(title), ...bodyParagraphs],
       },
     ],
@@ -147,6 +149,7 @@ export interface ProcuracaoData {
 }
 
 export async function buildProcuracaoDocx(data: ProcuracaoData): Promise<Buffer> {
+  const firm = await getFirmProfile();
   const today = new Date();
   const dateStr = today.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const body: Paragraph[] = [
@@ -154,7 +157,7 @@ export async function buildProcuracaoDocx(data: ProcuracaoData): Promise<Buffer>
     p(`${data.clientQualification}`),
     sectionTitle("OUTORGADO:"),
     p(
-      `${FIRM.lawyer}, brasileiro, advogado, inscrito na ${FIRM.oab}, com escritório jurídico localizado em ${FIRM.address}.`
+      `${firm.lawyer}, brasileiro, advogado, inscrito na ${firm.oab}, com escritório jurídico localizado em ${firm.address}.`
     ),
     sectionTitle("PODERES:"),
     p(
@@ -162,11 +165,11 @@ export async function buildProcuracaoDocx(data: ProcuracaoData): Promise<Buffer>
         data.scopeText ? ` ${data.scopeText}` : ""
       }`
     ),
-    p(`${data.city ?? FIRM.city}, ${dateStr}.`, { align: AlignmentType.RIGHT, spacingAfter: 800 }),
+    p(`${data.city ?? firm.city}, ${dateStr}.`, { align: AlignmentType.RIGHT, spacingAfter: 800 }),
     p(data.clientName, { align: AlignmentType.CENTER, bold: true, spacingAfter: 0 }),
     p("Outorgante", { align: AlignmentType.CENTER, italics: true }),
   ];
-  return renderLetterheadDocx("INSTRUMENTO PARTICULAR DE PROCURAÇÃO", body);
+  return renderLetterheadDocx("INSTRUMENTO PARTICULAR DE PROCURAÇÃO", body, firm);
 }
 
 // ---------------- CONTRATO DE HONORÁRIOS ----------------
@@ -191,8 +194,8 @@ function fmtBRL(v?: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function paymentClause(data: ContratoData): string {
-  const bank = data.bankInfo || FIRM.bank;
+function paymentClause(data: ContratoData, firm: FirmProfile): string {
+  const bank = data.bankInfo || firm.bank;
   switch (data.paymentType) {
     case "avista":
       return `Fica estabelecido o pagamento à vista no valor de ${fmtBRL(data.totalValue)}, a ser quitado mediante crédito na seguinte conta bancária: ${bank}.`;
@@ -216,13 +219,14 @@ function paymentClause(data: ContratoData): string {
 }
 
 export async function buildContratoDocx(data: ContratoData): Promise<Buffer> {
+  const firm = await getFirmProfile();
   const start = data.startDate ?? new Date();
   const dateStr = start.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   const body: Paragraph[] = [
     p(`CONTRATANTE: ${data.clientQualification}`),
     p(
-      `CONTRATADO: ${FIRM.companyName}, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº ${FIRM.cnpj}, com escritório profissional na ${FIRM.address}, neste ato representada por seu sócio, ${FIRM.lawyer}, brasileiro, advogado inscrito na ${FIRM.oab}, inscrito no CPF/MF sob o nº ${FIRM.cpf}.`
+      `CONTRATADO: ${firm.companyName || firm.name}, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº ${firm.cnpj}, com escritório profissional na ${firm.address}, neste ato representada por seu sócio, ${firm.lawyer}, brasileiro, advogado inscrito na ${firm.oab}, inscrito no CPF/MF sob o nº ${firm.cpf}.`
     ),
     p("As partes acima identificadas têm, entre si, justo e acertado o presente Contrato de Honorários Advocatícios, que se regerá pelas condições descritas no presente."),
 
@@ -239,7 +243,7 @@ export async function buildContratoDocx(data: ContratoData): Promise<Buffer> {
 
     sectionTitle("DO PRAZO E DOS HONORÁRIOS"),
     p(`Cláusula 4ª. O presente contrato terá vigência a partir de ${dateStr}, permanecendo válido até a conclusão do serviço contratado ou rescisão nos termos deste instrumento.`),
-    p(`Cláusula 5ª. ${paymentClause(data)}`),
+    p(`Cláusula 5ª. ${paymentClause(data, firm)}`),
 
     sectionTitle("DA RESCISÃO"),
     p(
@@ -253,21 +257,21 @@ export async function buildContratoDocx(data: ContratoData): Promise<Buffer> {
 
     sectionTitle("DA COMUNICAÇÃO"),
     p(
-      `Cláusula 8ª. O CONTRATANTE se compromete a manter atualizados os meios de contato ora avençados para a boa comunicação das partes, através do telefone ${FIRM.phone} e e-mail ${FIRM.email}.`
+      `Cláusula 8ª. O CONTRATANTE se compromete a manter atualizados os meios de contato ora avençados para a boa comunicação das partes, através do telefone ${firm.phone} e e-mail ${firm.email}.`
     ),
 
     sectionTitle("DO FORO"),
-    p(`Cláusula 9ª. Para dirimir quaisquer controvérsias oriundas deste contrato, as partes elegem o foro da comarca de ${data.city ?? FIRM.city}-${FIRM.state}, renunciando a qualquer outro por mais privilegiado que seja.`),
+    p(`Cláusula 9ª. Para dirimir quaisquer controvérsias oriundas deste contrato, as partes elegem o foro da comarca de ${data.city ?? firm.city}-${firm.state}, renunciando a qualquer outro por mais privilegiado que seja.`),
 
     p("Por estarem assim justos e contratados, firmam o presente instrumento.", { spacingAfter: 600 }),
-    p(`${data.city ?? FIRM.city}, ${dateStr}.`, { align: AlignmentType.RIGHT, spacingAfter: 800 }),
+    p(`${data.city ?? firm.city}, ${dateStr}.`, { align: AlignmentType.RIGHT, spacingAfter: 800 }),
     p(data.clientName, { align: AlignmentType.CENTER, bold: true, spacingAfter: 0 }),
     p("Contratante", { align: AlignmentType.CENTER, italics: true, spacingAfter: 600 }),
-    p(FIRM.companyName, { align: AlignmentType.CENTER, bold: true, spacingAfter: 0 }),
+    p(firm.companyName || firm.name, { align: AlignmentType.CENTER, bold: true, spacingAfter: 0 }),
     p("Contratada", { align: AlignmentType.CENTER, italics: true }),
   ];
 
-  return renderLetterheadDocx("CONTRATO DE HONORÁRIOS ADVOCATÍCIOS", body);
+  return renderLetterheadDocx("CONTRATO DE HONORÁRIOS ADVOCATÍCIOS", body, firm);
 }
 
 export function buildClientQualification(client: {

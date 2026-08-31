@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { generateMarketingContent, MarketingContentType } from "@/lib/ai";
 import { renderSocialPostImage, renderCarouselImages } from "@/lib/imagegen";
 import { AREA_LABEL } from "@/lib/constants";
+import { getFirmProfile } from "@/lib/firm";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +14,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const type = body.type as MarketingContentType;
   const areaLabel = AREA_LABEL[campaign.area] ?? campaign.area;
-  const generated = await generateMarketingContent(type, areaLabel, body.brief);
+  const firm = await getFirmProfile();
+  const generated = await generateMarketingContent(type, areaLabel, body.brief, { name: firm.name, oab: firm.oab });
 
   let imagePaths: string[] = [];
   try {
+    const cardFirm = { name: firm.name, oab: firm.oab, logoPath: firm.logoPath };
     if (type === "instagram_carousel" && generated.slides?.length) {
-      imagePaths = await renderCarouselImages(generated.slides, areaLabel);
+      imagePaths = await renderCarouselImages(generated.slides, areaLabel, cardFirm);
     } else if (type === "instagram_post" || type === "facebook_post" || type === "linkedin_post") {
-      imagePaths = [await renderSocialPostImage(generated.headline || body.brief, areaLabel)];
+      imagePaths = [await renderSocialPostImage(generated.headline || body.brief, areaLabel, cardFirm)];
     }
   } catch (e) {
     console.error("Falha ao gerar imagem de marketing", e);

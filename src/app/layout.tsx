@@ -8,8 +8,8 @@ const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap
 const display = Playfair_Display({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Wilson Andrade | Gestão do Escritório",
-  description: "Sistema de gestão jurídica - Wilson Andrade Advocacia e Consultoria Jurídica",
+  title: "Gestão do Escritório",
+  description: "Sistema de gestão jurídica para escritórios de advocacia",
   icons: { icon: "/brand/logo-icon.png" },
 };
 
