@@ -3,6 +3,24 @@
 Coletânea de minutas contratuais elaboradas para uso do escritório, com
 fundamentação na legislação, doutrina e jurisprudência vigentes.
 
+## Formatos disponíveis
+
+Cada modelo existe em duas versões:
+
+- **Markdown** (`.md`) — nesta pasta, para leitura rápida, versionamento e
+  comparação de alterações.
+- **Word** (`.docx`) — na subpasta [`docx/`](docx/), pronta para edição e
+  impressão: A4, margens forenses (3 cm à esquerda), Times New Roman 12,
+  texto justificado, rodapé com numeração de páginas e blocos de assinatura
+  já montados.
+
+Nos arquivos `.docx`, **todo campo de preenchimento aparece realçado em
+amarelo** (`[assim]`). Para retirar o realce depois de preencher, selecione
+tudo (Ctrl+A) e defina a cor de realce como "Sem cor".
+
+Os `.docx` são gerados a partir dos `.md`. Ao alterar um modelo, edite o
+`.md` e regere o `.docx` para manter as duas versões sincronizadas.
+
 ## Como usar
 
 1. **Todo campo entre colchetes `[ ]` é de preenchimento obrigatório.** Não

@@ -23,6 +23,9 @@ de prestação de serviços), cada uma com fundamentação legal, campos de
 preenchimento entre colchetes e um bloco final de notas técnicas com
 alertas de risco, exigências de forma e tributos incidentes. O índice
 completo está em [`modelos-contratos/README.md`](modelos-contratos/README.md).
+As mesmas minutas estão disponíveis em **Word** na subpasta
+[`modelos-contratos/docx/`](modelos-contratos/docx/), já formatadas em A4
+com margens forenses e campos de preenchimento realçados.
 
 ## Rodando localmente
 
