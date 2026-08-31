@@ -99,9 +99,11 @@ export default function PublicacoesPage() {
 
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-navy-100 bg-white px-4 py-3 text-xs text-navy-500">
         <Info size={14} className="mt-0.5 shrink-0 text-gold-500" />
-        A integração com a API do Escavador já está pronta no código — falta contratar e configurar{" "}
-        <code className="mx-1 rounded bg-navy-50 px-1">ESCAVADOR_API_TOKEN</code> para a busca automática diária às 08h funcionar (ver
-        README). Enquanto isso, use "Importar publicação" para lançar manualmente o conteúdo do diário.
+        A busca automática diária (08h) já está pronta no código, com dois provedores: o <strong>DJEN</strong> — API oficial e gratuita
+        do CNJ, mas que bloqueia acesso de fora do Brasil, exigindo um proxy brasileiro em{" "}
+        <code className="mx-1 rounded bg-navy-50 px-1">DJEN_PROXY_URL</code> — e o <strong>Escavador</strong>, provedor pago, que exige{" "}
+        <code className="mx-1 rounded bg-navy-50 px-1">ESCAVADOR_API_TOKEN</code> (ver README). Enquanto nenhum dos dois estiver
+        configurado, use "Importar publicação" para lançar manualmente o conteúdo do diário.
       </div>
 
       <div className="flex flex-wrap gap-2 mb-5">

@@ -42,22 +42,31 @@ Este projeto já inclui `Dockerfile` + `docker-entrypoint.sh` prontos para o [Ra
 | `CRON_SECRET` | Não | Protege o endpoint `/api/publicacoes/cron` (ver abaixo). |
 | `ESCAVADOR_API_TOKEN` | Não | Habilita a busca automática de publicações via [Escavador](https://api.escavador.com) (ver abaixo). |
 | `ESCAVADOR_WEBHOOK_SECRET` | Não | Protege o endpoint `/api/publicacoes/webhook/escavador`, usado pelo monitoramento em tempo real do Escavador (alternativa/complemento ao cron diário). |
+| `DJEN_PROXY_URL` | Não | URL de um proxy HTTP(S)/SOCKS5 com IP brasileiro (ex.: `http://usuario:senha@host:porta`), necessária para a API gratuita do DJEN (CNJ) funcionar fora do Brasil — ver abaixo. |
 
 ## Pontos de integração que precisam de configuração externa
 
 O sistema foi construído com esses pontos já prontos no código, mas alguns dependem de contratos/credenciais que só o escritório pode fornecer:
 
-1. **Busca automática diária de publicações (08h, todos os tribunais).** A integração com o **Escavador** já está implementada (`src/lib/escavador.ts`) — falta só a chave de API:
+1. **Busca automática diária de publicações (08h, todos os tribunais).** O sistema já tenta dois provedores, um gratuito e um pago, combinando o resultado dos dois:
+
+   **a) DJEN (gratuito, oficial do CNJ) — `src/lib/djen.ts`.** A API pública "Comunica" do Diário de Justiça Eletrônico Nacional não exige token, só a OAB do advogado. **Problema conhecido:** a infraestrutura do CNJ bloqueia requisições vindas de fora do Brasil — e o Railway não tem região no Brasil, então o app hospedado lá não consegue falar com essa API diretamente. Para contornar:
+   1. Contrate/obtenha um proxy HTTP(S) ou SOCKS5 com IP brasileiro. Qualquer opção com saída no Brasil serve: um serviço de proxy/VPN com geo-targeting BR (ex. IPRoyal, Webshare, Bright Data — geralmente alguns dólares/mês para poucos IPs), ou uma VPS barata contratada no Brasil (ex. Hostinger, Locaweb) rodando um proxy simples (tinyproxy, squid).
+   2. Defina `DJEN_PROXY_URL` nas variáveis de ambiente do Railway com a URL do proxy (ex.: `http://usuario:senha@host-proxy-brasileiro:porta`).
+   3. Cadastre os advogados com a **OAB completa** (ex.: `OAB/AL 14.662`) na página Advogados.
+   4. Teste chamando `POST /api/publicacoes/cron` manualmente (com o header `x-cron-secret` se `CRON_SECRET` estiver definido) e confira nos Deploy Logs do Railway se a chamada ao DJEN teve sucesso.
+
+   > Os nomes de campo usados em `src/lib/djen.ts` foram escritos a partir da documentação pública da API Comunica, sem uma chamada real bem-sucedida para conferir (o ambiente onde o código foi escrito não tem acesso de rede irrestrito para testar) — no primeiro uso com o proxy configurado, vale comparar o JSON retornado com o esperado e ajustar os nomes de campo se necessário.
+
+   **b) Escavador (pago) — `src/lib/escavador.ts`.** Cobertura mais ampla e sem depender de proxy (a Escavador já opera no Brasil), mas cobrado por crédito/consulta:
    1. Crie uma conta em [escavador.com](https://www.escavador.com) e, opcionalmente, teste o monitoramento gratuito (1 nome + 1 processo, atualização semanal) para avaliar a cobertura antes de contratar a API.
    2. Para a busca automática de verdade, contrate a **Escavador Business API** ([api.escavador.com](https://api.escavador.com)) — cobrança por crédito/consulta, pré-paga ou pós-paga (ver [tabela de preços](https://api.escavador.com/servicos) no painel deles).
    3. Gere um token no painel da API e defina `ESCAVADOR_API_TOKEN` nas variáveis de ambiente (no Railway: Settings → Variables).
-   4. Cadastre os advogados com a **OAB completa** (ex.: `OAB/AL 14.662`) na página Advogados — é isso que o sistema usa para consultar os processos de cada um.
-   5. Agende a chamada diária às 08h para `POST /api/publicacoes/cron` (com o header `x-cron-secret` se `CRON_SECRET` estiver definido) — no Railway isso pode ser um segundo serviço "Cron Job" apontando para essa URL, ou qualquer agendador externo (cron-job.org, GitHub Actions).
-   6. Opcionalmente, para atualizações em tempo real (não só uma vez por dia), configure no painel do Escavador um monitoramento (`POST /api/v2/monitoramentos/processos`) apontando o webhook para `https://SEU_DOMINIO/api/publicacoes/webhook/escavador?secret=SEU_ESCAVADOR_WEBHOOK_SECRET`.
-   
-   > Os nomes de campo usados em `src/lib/escavador.ts` foram escritos a partir da documentação pública do Escavador (sem uma chave real para testar) — no primeiro uso com token de verdade, vale conferir se o JSON retornado bate com o esperado e ajustar se necessário.
+   4. Opcionalmente, para atualizações em tempo real (não só uma vez por dia), configure no painel do Escavador um monitoramento (`POST /api/v2/monitoramentos/processos`) apontando o webhook para `https://SEU_DOMINIO/api/publicacoes/webhook/escavador?secret=SEU_ESCAVADOR_WEBHOOK_SECRET`.
 
-   Enquanto isso (ou se preferir não contratar), use o botão **"Importar publicação"** na página Publicações para lançar manualmente o conteúdo — a análise de prazo/urgência por IA funciona normalmente, só a busca automática que fica manual.
+   Em ambos os casos, agende a chamada diária às 08h para `POST /api/publicacoes/cron` (com o header `x-cron-secret` se `CRON_SECRET` estiver definido) — no Railway isso pode ser um segundo serviço "Cron Job" apontando para essa URL, ou qualquer agendador externo (cron-job.org, GitHub Actions).
+
+   Enquanto nenhum dos dois estiver configurado, use o botão **"Importar publicação"** na página Publicações para lançar manualmente o conteúdo — a análise de prazo/urgência por IA funciona normalmente, só a busca automática que fica manual.
 2. **Google Calendar.** Configure `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` e clique em "Conectar Google Calendar" na Agenda. Sem isso, a Agenda funciona normalmente, só não sincroniza com o Google.
 3. **PDF a partir dos documentos gerados (.docx → .pdf).** Requer LibreOffice (`soffice`) instalado no servidor onde o app roda. Se `soffice` não estiver disponível, o sistema continua gerando o `.docx` normalmente (formato editável), só não oferece o botão de baixar `.pdf`.
 4. **Facebook e Instagram (publicar, agendar, impulsionar).** A integração com a Graph API da Meta já está implementada (`src/lib/meta.ts`) — publicação imediata, agendamento (worker próprio, não depende do agendamento nativo da Meta) e impulsionamento (Marketing API) de posts do Facebook e Instagram. Passos para habilitar:
@@ -81,7 +90,7 @@ O sistema foi construído com esses pontos já prontos no código, mas alguns de
 - **Clientes** — cadastro completo (PF/PJ), upload de documentos, geração de Procuração e Contrato de Honorários (com o timbrado oficial), confirmação de assinatura do contrato e controle de parcelas ligado ao Financeiro.
 - **Agenda** — reuniões, compromissos, audiências, prazos e tarefas; integração opcional com Google Calendar.
 - **Publicações** — importação manual (ou automática, uma vez configurado o provedor), reconhecimento do advogado citado, sugestão de tarefa/prazo/urgência por IA, e envio direto para a Agenda.
-- **Marketing** — campanhas por área do direito; geração por IA de carrossel/post/reels para Instagram, post para Facebook e artigo de blog, seguindo a estrutura de conteúdo compatível com a OAB (situação → base normativa → nuance → fechamento informativo), com imagens já geradas automaticamente (sem depender de API paga de imagem); publicação, agendamento e impulsionamento diretos no Facebook/Instagram via integração com a Meta; acompanhamento automático de novos processos/clientes gerados durante a campanha.
+- **Marketing** — campanhas por área do direito; geração por IA de carrossel/post/reels para Instagram, post para Facebook e post para LinkedIn, escrita com técnica de storytelling por uma persona de redator sênior (15+ anos), seguindo a estrutura de conteúdo compatível com a OAB (cena/situação → virada técnica com base normativa → nuance → fechamento informativo que retoma a narrativa), com imagens já geradas automaticamente (sem depender de API paga de imagem); publicação, agendamento e impulsionamento diretos no Facebook/Instagram via integração com a Meta; acompanhamento automático de novos processos/clientes gerados durante a campanha.
 - **Financeiro** — contas bancárias, lançamentos manuais, importação de extrato (CSV, OFX/QFX, PDF ou TXT), análise mensal e projeção para os próximos 3 meses.
 - **Advogados** — cadastro de advogados/colaboradores, usado no reconhecimento de publicações e atribuição de tarefas.
 - **Meus Modelos** — upload de modelos `.docx` com variáveis (`{{cliente_nome}}` etc.), geração personalizada para um cliente específico, exportação em `.docx` e `.pdf`.

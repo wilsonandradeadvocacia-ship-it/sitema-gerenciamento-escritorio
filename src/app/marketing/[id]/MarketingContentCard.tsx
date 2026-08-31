@@ -9,6 +9,8 @@ const TYPE_LABELS: Record<string, string> = {
   instagram_carousel: "Carrossel Instagram",
   instagram_reels: "Reels Instagram",
   facebook_post: "Post Facebook",
+  linkedin_post: "Post LinkedIn",
+  // tipo legado (conteúdo gerado antes da troca por Post LinkedIn)
   artigo: "Artigo de blog",
   // tipos legados
   post: "Post",
@@ -31,7 +33,10 @@ export default function MarketingContentCard({ content, allPosts, hasInstagram, 
     ? [parsed.body, parsed.hashtags?.length ? parsed.hashtags.join(" ") : ""].filter(Boolean).join("\n\n")
     : content.content;
 
-  const isArtigo = content.type === "artigo";
+  // Tipo legado: conteúdo de "Artigo de blog" gerado antes da troca por "Post
+  // LinkedIn" não tem imagem/slides — mantém a renderização antiga (só corpo)
+  // para não quebrar campanhas já existentes.
+  const isLegacyArticle = content.type === "artigo";
 
   return (
     <Card className="p-5">
@@ -43,7 +48,7 @@ export default function MarketingContentCard({ content, allPosts, hasInstagram, 
 
       {!parsed ? (
         <div className="text-sm text-navy-700 whitespace-pre-wrap leading-relaxed">{content.content}</div>
-      ) : isArtigo ? (
+      ) : isLegacyArticle ? (
         <div className="text-sm text-navy-700 whitespace-pre-wrap leading-relaxed">{parsed.body}</div>
       ) : (
         <>
@@ -81,7 +86,7 @@ export default function MarketingContentCard({ content, allPosts, hasInstagram, 
         </p>
       )}
 
-      {!isArtigo && (content.type.startsWith("instagram") || content.type.startsWith("facebook") || content.type === "post" || content.type === "legenda") && (
+      {!isLegacyArticle && (content.type.startsWith("instagram") || content.type.startsWith("facebook") || content.type === "post" || content.type === "legenda") && (
         <PostComposer
           contentId={content.id}
           defaultCaption={captionText}

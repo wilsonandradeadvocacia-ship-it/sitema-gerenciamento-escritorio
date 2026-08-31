@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateMarketingContent, MarketingContentType } from "@/lib/ai";
-import { renderInstagramPostImage, renderCarouselImages } from "@/lib/imagegen";
+import { renderSocialPostImage, renderCarouselImages } from "@/lib/imagegen";
 import { AREA_LABEL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +19,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     if (type === "instagram_carousel" && generated.slides?.length) {
       imagePaths = await renderCarouselImages(generated.slides, areaLabel);
-    } else if (type === "instagram_post") {
-      imagePaths = [await renderInstagramPostImage(generated.headline || body.brief, areaLabel)];
+    } else if (type === "instagram_post" || type === "facebook_post" || type === "linkedin_post") {
+      imagePaths = [await renderSocialPostImage(generated.headline || body.brief, areaLabel)];
     }
   } catch (e) {
     console.error("Falha ao gerar imagem de marketing", e);

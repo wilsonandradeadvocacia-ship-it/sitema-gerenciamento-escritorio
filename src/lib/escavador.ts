@@ -14,6 +14,8 @@
  * o JSON retornado com o `RawEscavadorProcess` abaixo.
  */
 
+import { parseOab, FetchedPublication } from "./publications";
+
 const BASE_URL = "https://api.escavador.com/api/v2";
 
 export const ESCAVADOR_CONFIGURED = !!process.env.ESCAVADOR_API_TOKEN;
@@ -42,16 +44,6 @@ interface RawEscavadorProcessosResponse {
   data?: RawEscavadorProcess[];
 }
 
-function parseOab(oab: string): { numero: string; uf: string } | null {
-  // Aceita formatos como "OAB/AL 14.662", "AL 14662", "14662/AL", "14.662-AL"
-  const match = oab.toUpperCase().match(/([A-Z]{2}).{0,5}?(\d[\d.]{3,})|(\d[\d.]{3,}).{0,5}?([A-Z]{2})/);
-  if (!match) return null;
-  const uf = match[1] || match[4];
-  const numero = (match[2] || match[3])?.replace(/\D/g, "");
-  if (!uf || !numero) return null;
-  return { numero, uf };
-}
-
 async function escavadorFetch<T>(path: string, params: Record<string, string>): Promise<T | null> {
   const token = process.env.ESCAVADOR_API_TOKEN;
   if (!token) return null;
@@ -68,14 +60,6 @@ async function escavadorFetch<T>(path: string, params: Record<string, string>): 
     return null;
   }
   return (await res.json()) as T;
-}
-
-export interface FetchedPublication {
-  tribunal: string;
-  instance?: string;
-  content: string;
-  processNumber?: string;
-  date?: string;
 }
 
 /**

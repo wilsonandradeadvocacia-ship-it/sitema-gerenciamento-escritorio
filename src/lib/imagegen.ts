@@ -143,9 +143,10 @@ export interface CarouselSlideInput {
 }
 
 /**
- * Renderiza um post único (imagem 1080x1080) a partir de um título/gancho.
+ * Renderiza um card único (imagem 1080x1080) a partir de um título/gancho —
+ * usado para post único de Instagram, Facebook e LinkedIn.
  */
-export async function renderInstagramPostImage(headline: string, area?: string): Promise<string> {
+export async function renderSocialPostImage(headline: string, area?: string): Promise<string> {
   const buffer = await renderCard({
     eyebrow: area,
     title: headline,

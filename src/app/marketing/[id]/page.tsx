@@ -13,7 +13,7 @@ const CONTENT_TYPES = [
   { value: "instagram_post", label: "Post único Instagram" },
   { value: "instagram_reels", label: "Roteiro Reels" },
   { value: "facebook_post", label: "Post Facebook" },
-  { value: "artigo", label: "Artigo de blog" },
+  { value: "linkedin_post", label: "Post LinkedIn" },
 ];
 
 export default function CampaignDetailPage() {
