@@ -14,6 +14,16 @@ Cada escritório que se cadastra (`/registro`) tem seus próprios dados
 isolados (clientes, contratos, financeiro, agenda, tabelas OAB) — não há mais
 armazenamento em `localStorage`.
 
+## Acervo de modelos contratuais
+
+A pasta [`modelos-contratos/`](modelos-contratos/) reúne 34 minutas
+contratuais prontas para adaptação (locação, compra e venda, contratos
+agrários, trabalhistas, societários, de família e sucessões, financeiros e
+de prestação de serviços), cada uma com fundamentação legal, campos de
+preenchimento entre colchetes e um bloco final de notas técnicas com
+alertas de risco, exigências de forma e tributos incidentes. O índice
+completo está em [`modelos-contratos/README.md`](modelos-contratos/README.md).
+
 ## Rodando localmente
 
 ### 1. Backend
