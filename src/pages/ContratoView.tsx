@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import { formatBRL, formatDate, todayISO } from '../lib/format'
+import Visto, { RubricaVisto } from '../components/Visto'
 
 export default function ContratoView() {
   const { id } = useParams()
@@ -42,9 +43,14 @@ export default function ContratoView() {
           <h1 className="text-2xl font-serif font-semibold text-brand-900">Contrato de honorários</h1>
           <p className="text-sm text-slate-500">
             Cliente: {cliente.nome} · Status:{' '}
-            <span className={contrato.assinado ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'}>
-              {contrato.assinado ? 'Assinado' : 'Rascunho / Aguardando assinatura'}
-            </span>
+            {contrato.assinado ? (
+              <span className="inline-flex items-center gap-1.5 font-medium text-caneta-600">
+                <Visto draw title="Assinado" className="text-caneta-600" />
+                Assinado
+              </span>
+            ) : (
+              <span className="font-medium text-amber-600">Rascunho / Aguardando assinatura</span>
+            )}
           </p>
         </div>
         <div className="flex gap-3">
@@ -72,7 +78,7 @@ export default function ContratoView() {
                 </button>
               </div>
             ) : (
-              <button className="btn-gold" onClick={() => setConfirmando(true)}>
+              <button className="btn-caneta" onClick={() => setConfirmando(true)}>
                 Confirmar assinatura do cliente
               </button>
             ))}
@@ -252,11 +258,17 @@ export default function ContratoView() {
             </div>
           </div>
           {contrato.assinado && (
-            <div className="mt-6 text-center text-xs text-green-700 border border-green-200 bg-green-50 rounded-lg py-2">
-              Assinatura do(a) cliente confirmada digitalmente no sistema em{' '}
-              {formatDate(contrato.dataAssinatura!)}.
+            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-caneta-700 border border-caneta-200 bg-caneta-50 rounded-lg py-2 px-3">
+              <Visto cut="master" height={12} className="text-caneta-600" />
+              <span>
+                Assinatura do(a) cliente confirmada digitalmente no sistema em{' '}
+                {formatDate(contrato.dataAssinatura!)}.
+              </span>
             </div>
           )}
+          <div className="flex justify-end pt-8">
+            <RubricaVisto etiqueta="CONTRATO GERADO" />
+          </div>
         </section>
 
         <section className="pt-10 border-t border-dashed border-slate-300 mt-10">
@@ -276,6 +288,9 @@ export default function ContratoView() {
           <div className="mt-10 text-center">
             <div className="border-t border-slate-500 pt-2 inline-block px-16">{cliente.nome}</div>
             <div className="text-xs text-slate-500">OUTORGANTE</div>
+          </div>
+          <div className="flex justify-end pt-8">
+            <RubricaVisto etiqueta="PROCURAÇÃO GERADA" />
           </div>
         </section>
       </div>

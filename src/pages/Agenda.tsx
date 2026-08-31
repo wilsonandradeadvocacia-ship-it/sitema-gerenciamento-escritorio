@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { formatBRL, formatDate, todayISO } from '../lib/format'
 import type { TipoEventoAgenda } from '../types'
+import Visto from '../components/Visto'
 
 const tipoLabel: Record<TipoEventoAgenda, string> = {
   pagamento: 'Pagamento',
@@ -12,7 +13,7 @@ const tipoLabel: Record<TipoEventoAgenda, string> = {
 }
 
 const tipoCor: Record<TipoEventoAgenda, string> = {
-  pagamento: 'bg-gold-500',
+  pagamento: 'bg-emerald-600',
   audiencia: 'bg-red-500',
   prazo: 'bg-amber-500',
   reuniao: 'bg-brand-500',
@@ -159,11 +160,12 @@ export default function Agenda() {
                       <div
                         key={e.id}
                         title={e.titulo}
-                        className={`text-[10px] text-white rounded px-1 truncate ${tipoCor[e.tipo]} ${
-                          e.concluido ? 'opacity-40' : ''
+                        className={`flex items-center gap-1 text-[10px] text-white rounded px-1 ${tipoCor[e.tipo]} ${
+                          e.concluido ? 'opacity-60' : ''
                         }`}
                       >
-                        {e.titulo}
+                        {e.concluido && <Visto height={7} title="Concluído" className="text-white" />}
+                        <span className="truncate">{e.titulo}</span>
                       </div>
                     ))}
                     {evs.length > 2 && <div className="text-[10px] text-slate-400">+{evs.length - 2}</div>}

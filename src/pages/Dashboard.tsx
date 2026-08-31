@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { formatBRL, formatDate, todayISO } from '../lib/format'
+import Visto from '../components/Visto'
 
 export default function Dashboard() {
   const { clientes, contratos, lancamentos, eventos } = useStore()
@@ -40,7 +41,13 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Clientes" value={String(clientes.length)} to="/clientes" />
-        <StatCard label="Contratos assinados" value={String(contratosAssinados.length)} to="/calculadora" />
+        <StatCard
+          label="Contratos assinados"
+          value={String(contratosAssinados.length)}
+          to="/calculadora"
+          tone="caneta"
+          marcado={contratosAssinados.length > 0}
+        />
         <StatCard label="A receber (previsto)" value={formatBRL(totalPrevisto)} to="/financeiro" tone="brand" />
         <StatCard label="Em atraso" value={formatBRL(totalAtrasado)} to="/financeiro" tone="red" />
       </div>
@@ -120,18 +127,28 @@ function StatCard({
   value,
   to,
   tone = 'default',
+  marcado = false,
 }: {
   label: string
   value: string
   to: string
-  tone?: 'default' | 'brand' | 'red'
+  tone?: 'default' | 'brand' | 'red' | 'caneta'
+  /** Exibe o Visto pousado sob o número — só onde ele significa "resolvido". */
+  marcado?: boolean
 }) {
   const toneClass =
-    tone === 'brand' ? 'text-brand-800' : tone === 'red' ? 'text-red-600' : 'text-slate-800'
+    tone === 'brand'
+      ? 'text-brand-800'
+      : tone === 'red'
+      ? 'text-red-600'
+      : tone === 'caneta'
+      ? 'text-caneta-700'
+      : 'text-slate-800'
   return (
     <Link to={to} className="card p-5 hover:shadow-md transition-shadow block">
       <div className="text-xs text-slate-500">{label}</div>
       <div className={`text-xl font-serif font-semibold mt-1 ${toneClass}`}>{value}</div>
+      {marcado && <Visto cut="master" height={11} className="text-caneta-600 mt-2" />}
     </Link>
   )
 }

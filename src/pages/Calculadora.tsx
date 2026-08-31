@@ -298,7 +298,7 @@ export default function Calculadora() {
 
       <div className="flex justify-end">
         <button
-          className="btn-gold px-6 py-3 text-base"
+          className="btn-caneta px-6 py-3 text-base"
           disabled={!clienteId || !descricaoServico.trim() || valorFinal <= 0}
           onClick={gerarContrato}
         >

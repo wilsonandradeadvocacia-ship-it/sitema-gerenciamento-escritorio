@@ -16,10 +16,28 @@ export default {
           800: '#1f3157',
           900: '#1b294a',
         },
-        gold: {
-          400: '#d4af6a',
-          500: '#c39a4c',
-          600: '#a67f39',
+        // Azul-caneta: a tinta do Visto. É o azul real da esferográfica, não o
+        // azul institucional do `brand` — a diferença entre os dois é
+        // proposital e não deve ser "harmonizada".
+        caneta: {
+          50: '#eef1fe',
+          100: '#e3e7fa',
+          200: '#c6cff6',
+          300: '#9baaef',
+          400: '#5e75e2',
+          500: '#2f4bd3',
+          600: '#1b39c8',
+          700: '#172fa3',
+          800: '#152882',
+          900: '#142468',
+        },
+        // Limão-grifo: acento escasso. Uma ocorrência por tela, para marcar o
+        // dado que interessa. Nunca carrega a marca sozinho.
+        grifo: {
+          300: '#ddfa82',
+          400: '#d2f85e',
+          500: '#c8f53c',
+          600: '#a9d41e',
         },
       },
       fontFamily: {

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { formatBRL, formatDate, todayISO } from '../lib/format'
 import type { StatusLancamento } from '../types'
+import Visto from '../components/Visto'
 
 function statusAtual(status: StatusLancamento, vencimento: string): StatusLancamento {
   if (status !== 'previsto') return status
@@ -107,7 +108,12 @@ export default function Financeiro() {
                   <td className="px-4 py-2 text-slate-600">{formatDate(l.dataVencimento)}</td>
                   <td className="px-4 py-2 text-slate-700 font-medium">{formatBRL(l.valor)}</td>
                   <td className="px-4 py-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${badge[l.statusAtual]}`}>
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border ${
+                        badge[l.statusAtual]
+                      }`}
+                    >
+                      {l.statusAtual === 'recebido' && <Visto height={7} />}
                       {l.statusAtual}
                     </span>
                   </td>

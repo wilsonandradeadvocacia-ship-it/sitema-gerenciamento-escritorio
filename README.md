@@ -88,3 +88,35 @@ de confiança variável por item, e devem ser periodicamente conferidos e
 atualizados com os valores oficiais vigentes de cada seccional — a tela
 "Tabelas OAB" dentro do sistema permite editar tudo isso sem precisar mexer
 no código.
+
+## O Visto — elemento de assinatura da marca
+
+O detalhe visual que identifica o produto não é o logotipo: é **o Visto** —
+uma linha de assinatura reta cuja ponta direita sobe num visto, feita num
+traço só, como quem rubrica e confere ao mesmo tempo. Ele diz, numa forma
+só, o que o sistema entrega: *o que antes exigia assinatura agora está feito.*
+
+A geometria mora em `src/components/Visto.tsx` e é a única fonte do desenho —
+nenhuma tela deve redesenhar o traço à mão. O componente aceita dois cortes:
+`master` (3,6:1) para uso grande e `compact` (1,7:1) para uso pequeno, que é
+correção óptica, não uma variante de estilo.
+
+Regras de aplicação (não são gosto — é o que separa a marca de um checkmark
+genérico de app):
+
+- **Proporção:** linha longa e baixa, subida curta no fim. Um tique solto,
+  sem a linha, não é a marca.
+- **Posição:** de rubrica — rodapé, à direita, embaixo do que ele confere.
+- **Tinta:** azul-caneta (`caneta-600`, `#1b39c8`), o azul real da
+  esferográfica. É deliberadamente diferente do azul institucional `brand`;
+  os dois não devem ser "harmonizados".
+- **Uso escasso:** só onde algo foi de fato concluído — contrato assinado,
+  parcela recebida, compromisso cumprido, documento gerado. Se aparecer em
+  tudo, para de significar alguma coisa.
+- **Sem cor:** o traço usa `currentColor` e tem que continuar legível em
+  preto e branco. Ele nunca depende de cor para ser reconhecido.
+
+A paleta tem ainda o **limão-grifo** (`grifo-500`, `#c8f53c`) como acento
+escasso — uma ocorrência por tela, para marcar o que interessa (hoje, o item
+ativo do menu). O dourado antigo foi aposentado: dourado com serifada é o
+uniforme da categoria inteira.
