@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, Kpi, PageHeader, UrgencyBadge } from "@/components/ui";
 import { AREA_LABEL, EVENT_TYPES } from "@/lib/constants";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { Gavel, Users, Newspaper, Wallet, CalendarDays, Sparkles } from "lucide-react";
+import { Gavel, Users, Wallet, CalendarDays } from "lucide-react";
 
 const COLORS = ["#b8935c", "#8a6a3d", "#dbbd85", "#1f3358", "#4e6b9e", "#7a90b6", "#a7b5cf", "#634b2e", "#cca86a", "#141c2e", "#0c121e"];
 
@@ -28,10 +28,9 @@ export default function DashboardPage() {
     <div>
       <PageHeader title="Visão Geral" subtitle="Panorama do escritório Wilson Andrade Advocacia e Consultoria Jurídica" />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Kpi label="Processos ativos" value={data.activeProcesses} />
         <Kpi label="Clientes" value={data.clients} />
-        <Kpi label="Publicações pendentes" value={data.pendingPublications} />
         <Kpi
           label="Saldo (30 dias)"
           value={<span className={data.finance.saldo30 >= 0 ? "text-emerald-700" : "text-red-600"}>{fmtBRL(data.finance.saldo30)}</span>}
@@ -86,31 +85,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display text-base text-navy-900 flex items-center gap-2">
-              <Newspaper size={16} className="text-gold-500" /> Publicações recentes
-            </h3>
-            <Link href="/publicacoes" className="text-xs text-gold-600 hover:underline">
-              Ver todas
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {data.recentPublications.map((p: any) => (
-              <div key={p.id} className="text-sm border-b border-navy-50 pb-2">
-                <p className="text-navy-800">
-                  {p.tribunal} {p.matchedLawyer ? `· ${p.matchedLawyer.name}` : ""}
-                </p>
-                <p className="text-xs text-navy-400 flex items-center gap-1">
-                  <Sparkles size={11} className="text-gold-500" /> {p.suggestedTask}
-                </p>
-              </div>
-            ))}
-            {data.recentPublications.length === 0 && <p className="text-xs text-navy-400">Nenhuma publicação ainda.</p>}
-          </div>
-        </Card>
-
+      <div className="mt-5 max-w-md">
         <Card className="p-5">
           <h3 className="font-display text-base text-navy-900 mb-3 flex items-center gap-2">
             <Wallet size={16} className="text-gold-500" /> Financeiro (30 dias)

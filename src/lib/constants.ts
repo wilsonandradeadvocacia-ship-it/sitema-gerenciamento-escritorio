@@ -53,18 +53,6 @@ export const TEMPLATE_CATEGORIES = [
   { value: "outro", label: "Outro" },
 ] as const;
 
-export const TRIBUNAIS = [
-  "TJAL",
-  "TJSE",
-  "TRT19",
-  "TRF5",
-  "TRE-AL",
-  "STJ",
-  "STF",
-  "TST",
-  "TCE-AL",
-];
-
 export const TEMPLATE_PLACEHOLDERS = [
   { key: "cliente_nome", label: "Nome do cliente" },
   { key: "cliente_qualificacao", label: "Qualificação completa do cliente" },

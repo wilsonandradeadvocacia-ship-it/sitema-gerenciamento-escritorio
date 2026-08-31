@@ -9,8 +9,7 @@ export const dynamic = "force-dynamic";
  * agendador externo (Railway Cron, cron-job.org, GitHub Actions). Publica todo
  * post com status "agendado" cujo scheduledAt já passou.
  *
- * Proteja com CRON_SECRET (header "x-cron-secret"), igual ao endpoint de
- * publicações.
+ * Proteja com CRON_SECRET (header "x-cron-secret").
  */
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;

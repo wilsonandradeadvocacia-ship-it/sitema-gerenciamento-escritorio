@@ -40,64 +40,6 @@ function extractJson<T>(text: string | null): T | null {
   }
 }
 
-// ---------------- PUBLICATIONS ----------------
-
-export interface PublicationAnalysis {
-  suggestedTask: string;
-  suggestedDeadlineDays: number;
-  urgency: "baixa" | "media" | "alta" | "critica";
-  urgencyReason: string;
-}
-
-const DEADLINE_KEYWORDS: { pattern: RegExp; days: number; task: string; urgency: PublicationAnalysis["urgency"] }[] = [
-  { pattern: /embargos de declara/i, days: 5, task: "Avaliar cabimento e protocolar Embargos de Declaração", urgency: "alta" },
-  { pattern: /contesta[çc][ãa]o/i, days: 15, task: "Elaborar e protocolar Contestação", urgency: "alta" },
-  { pattern: /apela[çc][ãa]o/i, days: 15, task: "Elaborar e protocolar Apelação", urgency: "critica" },
-  { pattern: /recurso especial|resp\b/i, days: 15, task: "Avaliar e protocolar Recurso Especial", urgency: "critica" },
-  { pattern: /agravo/i, days: 15, task: "Avaliar cabimento e protocolar Agravo", urgency: "alta" },
-  { pattern: /r[ée]plica/i, days: 15, task: "Elaborar Réplica à contestação", urgency: "media" },
-  { pattern: /impugna[çc][ãa]o/i, days: 15, task: "Elaborar Impugnação", urgency: "media" },
-  { pattern: /manifest[ea]|manifesta[çc][ãa]o/i, days: 5, task: "Elaborar manifestação sobre o documento/decisão", urgency: "media" },
-  { pattern: /audi[êe]ncia designada|designad[ao] audi[êe]ncia/i, days: 0, task: "Preparar-se para a audiência designada e agendar com o cliente", urgency: "alta" },
-  { pattern: /per[íi]cia/i, days: 10, task: "Indicar assistente técnico/quesitos para a perícia", urgency: "media" },
-  { pattern: /senten[çc]a/i, days: 15, task: "Analisar sentença e decidir sobre recurso", urgency: "critica" },
-  { pattern: /despacho|decis[ãa]o interlocut[óo]ria/i, days: 5, task: "Analisar decisão e verificar necessidade de manifestação", urgency: "media" },
-  { pattern: /intima[çc][ãa]o para pagamento|cumprimento de senten[çc]a/i, days: 15, task: "Orientar cliente sobre cumprimento de sentença/pagamento", urgency: "alta" },
-  { pattern: /citaç[ãa]o/i, days: 15, task: "Verificar citação e providenciar defesa cabível", urgency: "alta" },
-  { pattern: /arquivamento/i, days: 5, task: "Avaliar necessidade de desarquivamento ou medida cabível", urgency: "baixa" },
-];
-
-export function heuristicPublicationAnalysis(content: string): PublicationAnalysis {
-  for (const rule of DEADLINE_KEYWORDS) {
-    if (rule.pattern.test(content)) {
-      return {
-        suggestedTask: rule.task,
-        suggestedDeadlineDays: rule.days,
-        urgency: rule.urgency,
-        urgencyReason: `Publicação menciona termo relevante ("${rule.pattern.source.split("|")[0]}") sugerindo prazo processual de ${rule.days} dia(s) úteis.`,
-      };
-    }
-  }
-  return {
-    suggestedTask: "Ler publicação na íntegra e avaliar necessidade de providência",
-    suggestedDeadlineDays: 5,
-    urgency: "media",
-    urgencyReason: "Não foi identificado termo processual específico; recomenda-se análise manual da publicação.",
-  };
-}
-
-export async function analyzePublication(content: string, processContext?: string): Promise<PublicationAnalysis> {
-  const heuristic = heuristicPublicationAnalysis(content);
-  const system =
-    "Você é um assistente jurídico brasileiro especializado em prazos processuais. Analise publicações de diários oficiais e responda SOMENTE em JSON válido, sem markdown, no formato: " +
-    '{"suggestedTask": string, "suggestedDeadlineDays": number, "urgency": "baixa"|"media"|"alta"|"critica", "urgencyReason": string}. ' +
-    "Considere o Código de Processo Civil, CLT e legislação processual aplicável ao teor da publicação. Seja objetivo e prático.";
-  const prompt = `Publicação do diário oficial:\n"""${content}"""\n${processContext ? `Contexto do processo: ${processContext}\n` : ""}Gere a análise em JSON.`;
-  const text = await askClaude(system, prompt, 500);
-  const parsed = extractJson<PublicationAnalysis>(text);
-  return parsed ?? heuristic;
-}
-
 // ---------------- PROCESS TASK SUGGESTION ----------------
 
 export interface ProcessTaskSuggestion {

@@ -12,7 +12,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       responsible: true,
       movements: { orderBy: { date: "desc" } },
       events: { orderBy: { date: "asc" } },
-      publications: { orderBy: { date: "desc" } },
       contracts: true,
       powersOfAtty: true,
     },

@@ -161,19 +161,6 @@ export default function ProcessoDetailPage() {
               </div>
             </dl>
           </Card>
-
-          {process.publications?.length > 0 && (
-            <Card className="p-5">
-              <h3 className="font-display text-base text-navy-900 mb-3">Publicações relacionadas</h3>
-              <div className="space-y-2">
-                {process.publications.map((pub: any) => (
-                  <Link key={pub.id} href={`/publicacoes`} className="block text-xs text-navy-500 hover:text-gold-600 border-b border-navy-50 pb-2">
-                    {new Date(pub.date).toLocaleDateString("pt-BR")} · {pub.tribunal}
-                  </Link>
-                ))}
-              </div>
-            </Card>
-          )}
         </div>
       </div>
     </div>

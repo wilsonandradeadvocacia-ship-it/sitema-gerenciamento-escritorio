@@ -53,7 +53,7 @@ export default function AdvogadosPage() {
     <div>
       <PageHeader
         title="Advogados e Colaboradores"
-        subtitle="Cadastro usado na busca de publicações e atribuição de tarefas na Agenda"
+        subtitle="Cadastro usado na atribuição de tarefas na Agenda"
         actions={
           <button className="btn-gold" onClick={() => setOpen(true)}>
             <Plus size={16} /> Novo cadastro
@@ -65,7 +65,7 @@ export default function AdvogadosPage() {
         <Card>
           <EmptyState
             title="Nenhum advogado cadastrado"
-            description="Cadastre os advogados e colaboradores do escritório para vincular publicações, processos e tarefas da agenda."
+            description="Cadastre os advogados e colaboradores do escritório para vincular processos e tarefas da agenda."
             action={
               <button className="btn-gold" onClick={() => setOpen(true)}>
                 <Plus size={16} /> Cadastrar primeiro advogado

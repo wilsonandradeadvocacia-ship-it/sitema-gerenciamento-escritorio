@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
       clientId: body.clientId || null,
       lawyerId: body.lawyerId || null,
       assignedToId: body.assignedToId || null,
-      publicationId: body.publicationId || null,
     },
   });
 
