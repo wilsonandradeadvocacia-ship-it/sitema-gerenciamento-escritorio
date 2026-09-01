@@ -1,4 +1,4 @@
-# Sistema de Gestão — Wilson Andrade Advocacia e Consultoria Jurídica
+# Sistema de Gestão para Escritório de Advocacia
 
 Sistema interno de gestão do escritório: processos, clientes, agenda, marketing, financeiro, advogados e modelos de documentos, com a identidade visual do escritório (logo, cores dourado/azul-marinho) e geração de documentos usando o timbrado oficial.
 
