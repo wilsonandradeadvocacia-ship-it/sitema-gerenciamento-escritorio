@@ -155,7 +155,7 @@ Se o usuário pedir análise sem juntar documentos, liste objetivamente o que fa
 - Divulgação/marketing do escritório sobre atuação no agro, dentro dos limites éticos da OAB → skill `marketing-juridico-oab`
 - Matéria eleitoral (candidato, campanha, propaganda) → skill `advogado-eleitoral`
 - Matéria municipal/administrativa (licitação, tributo municipal, servidor) → skill de direito municipalista, se instalada
-- Produção do documento final em `.docx` com padrão do escritório → skill de documento, se instalada
+- Produção do documento final em `.docx` no papel timbrado do escritório → skill `documento-timbrado` (**usar sempre que o produto for um documento entregável**)
 
 Se a skill não estiver instalada no ambiente, informe e entregue o melhor possível dentro desta.
 

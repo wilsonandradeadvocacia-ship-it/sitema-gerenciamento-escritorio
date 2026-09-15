@@ -137,7 +137,7 @@ Quando a demanda extrapolar o núcleo eleitoral, escalonar:
 
 - Peça gráfica/post/carrossel de conteúdo institucional do escritório (marketing do próprio escritório de advocacia, não da campanha do cliente) e seus limites éticos perante a OAB → skill `marketing-juridico-oab`
 - Matéria administrativa/municipal fora do período ou do núcleo eleitoral (licitação, servidor, tributário municipal) → skill de direito municipalista, se instalada
-- Produção do documento final em `.docx` com formatação de escritório → skill de padronização de escrita/documento do escritório, se instalada
+- Produção do documento final em `.docx` no papel timbrado do escritório → skill `documento-timbrado` (**usar sempre que o produto for um documento entregável**)
 
 Se alguma dessas skills não estiver instalada no ambiente em uso, informar ao usuário e prosseguir com a melhor entrega possível dentro desta skill.
 
