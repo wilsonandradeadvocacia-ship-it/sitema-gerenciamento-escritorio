@@ -52,8 +52,10 @@ Opções:
 
 | Flag | Efeito |
 |---|---|
-| `--recuo` | Recuo de primeira linha (2 cm) nos parágrafos — padrão clássico de petição forense |
+| `--sem-recuo` | Desliga o recuo e separa os parágrafos por espaçamento — use só em quadro, tabela densa ou documento de leitura corrida (relatório interno, proposta) |
 | `--template CAMINHO` | Usa outro timbrado (ex.: papel de um cliente ou de banca parceira) |
+
+**Padrão do escritório (já é o default, não precisa de flag):** padrão forense clássico — Times New Roman 11, justificado, entrelinha 1,5, **recuo de primeira linha de 2 cm** e sem espaço extra entre parágrafos. Linhas de campo no formato `**Consulente:** ...` ficam automaticamente rentes à margem, sem recuo.
 
 O script usa **apenas a biblioteca padrão do Python** — não depende de python-docx, pandoc ou LibreOffice. Ele abre o template, injeta o corpo e regrava o arquivo: cabeçalhos, imagem do timbrado, margens e estilos permanecem byte a byte idênticos ao original.
 
@@ -63,7 +65,7 @@ O script usa **apenas a biblioteca padrão do Python** — não depende de pytho
 |---|---|
 | `# Título` | Centralizado, negrito — use para o título da peça |
 | `## Seção` / `### Subseção` | Negrito, alinhado à esquerda — use para `I — DOS FATOS`, `II — DO DIREITO` |
-| Parágrafo comum | Justificado, Times New Roman 11, entrelinha 1,5 |
+| Parágrafo comum | Justificado, Times New Roman 11, entrelinha 1,5, recuo de 2 cm na primeira linha |
 | `**negrito**`, `*itálico*` | Formatação inline |
 | `- item` / `1. item` | Lista recuada |
 | `\| a \| b \|` com linha `\|---\|---\|` | Tabela com bordas e cabeçalho sombreado |

@@ -18,6 +18,8 @@ python3 .claude/skills/documento-timbrado/scripts/gerar_docx.py entrada.md "Nome
 
 O timbrado oficial fica em `.claude/skills/documento-timbrado/assets/timbrado-wilson-andrade.docx` e não deve ser alterado.
 
+**Formatação padrão do escritório:** padrão forense clássico — Times New Roman 11, justificado, entrelinha 1,5, recuo de primeira linha de 2 cm e sem espaço extra entre parágrafos. Já é o comportamento default do gerador; só desligue com `--sem-recuo` em documento de leitura corrida (relatório interno, proposta comercial).
+
 Toda peça e todo parecer fecham com:
 
 ```

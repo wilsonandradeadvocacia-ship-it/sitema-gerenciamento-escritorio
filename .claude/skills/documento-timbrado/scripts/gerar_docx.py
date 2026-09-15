@@ -6,7 +6,10 @@ tamanho de página) vem do template em assets/ e nunca é tocado: o script apena
 injeta o corpo do texto no document.xml.
 
 Uso:
-    python3 gerar_docx.py entrada.md saida.docx [--recuo] [--template CAMINHO]
+    python3 gerar_docx.py entrada.md saida.docx [--sem-recuo] [--template CAMINHO]
+
+Padrão forense clássico: Times New Roman 11, justificado, entrelinha 1,5,
+recuo de primeira linha de 2 cm e sem espaço extra entre parágrafos.
 
 Markdown aceito: # ## ### títulos, parágrafos, **negrito**, *itálico*,
 listas com "-" ou "1.", tabelas com "|", citações com ">", [QUEBRA] para
@@ -131,11 +134,12 @@ def eh_separador_tabela(linha):
     return bool(re.match(r'^\|?[\s:|-]+\|[\s:|-]*$', linha.strip())) and '-' in linha
 
 
-def converter(md, recuo_primeira_linha=False):
+def converter(md, recuo_primeira_linha=True):
     corpo = []
     linhas = md.replace('\r\n', '\n').split('\n')
     i = 0
-    primeira = 567 if recuo_primeira_linha else 0
+    primeira = 1134 if recuo_primeira_linha else 0  # 2 cm
+    depois_corpo = 0 if recuo_primeira_linha else 120
     while i < len(linhas):
         linha = linhas[i].rstrip()
         bruta = linha.strip()
@@ -210,12 +214,15 @@ def converter(md, recuo_primeira_linha=False):
             bloco.append(prox)
             i += 1
         texto = ' '.join(bloco)
-        recuado = primeira if not re.match(r'^\*\*[^*]+:\*\*', texto) else 0
-        corpo.append(paragrafo(texto, jc='both', primeira_linha=recuado))
+        # linhas de campo ("**Consulente:** ...") não recebem recuo de parágrafo
+        campo = bool(re.match(r'^\*\*[^*]+:\*\*', texto))
+        corpo.append(paragrafo(texto, jc='both',
+                               primeira_linha=0 if campo else primeira,
+                               depois=depois_corpo))
     return ''.join(corpo)
 
 
-def gerar(entrada, saida, template=TEMPLATE_PADRAO, recuo=False):
+def gerar(entrada, saida, template=TEMPLATE_PADRAO, recuo=True):
     if not os.path.exists(template):
         sys.exit('Template do timbrado não encontrado: %s' % template)
     with open(entrada, encoding='utf-8') as f:
@@ -249,10 +256,11 @@ def main():
     p.add_argument('entrada', help='arquivo .md com o conteúdo')
     p.add_argument('saida', help='arquivo .docx de saída')
     p.add_argument('--template', default=TEMPLATE_PADRAO, help='outro timbrado .docx')
-    p.add_argument('--recuo', action='store_true',
-                   help='recuo de primeira linha nos parágrafos (padrão de petição)')
+    p.add_argument('--sem-recuo', dest='sem_recuo', action='store_true',
+                   help='desliga o recuo de primeira linha (padrão forense) e separa '
+                        'os parágrafos por espaçamento')
     a = p.parse_args()
-    print(gerar(a.entrada, a.saida, a.template, a.recuo))
+    print(gerar(a.entrada, a.saida, a.template, not a.sem_recuo))
 
 
 if __name__ == '__main__':
